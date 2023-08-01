@@ -76,6 +76,9 @@ dependencies {
     implementation("com.google.dagger:hilt-android:${versions["hilt"]}")
     implementation("com.squareup.retrofit2:retrofit:${versions["retrofit"]}")
     implementation("com.squareup.retrofit2:converter-jackson:${versions["retrofit"]}")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 
     kapt("com.google.dagger:hilt-android-compiler:${versions["hilt"]}")
 }
