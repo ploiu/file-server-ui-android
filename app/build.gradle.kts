@@ -77,6 +77,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:${versions["retrofit"]}")
     implementation("com.squareup.retrofit2:converter-jackson:${versions["retrofit"]}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 

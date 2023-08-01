@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
 import ploiu.fileserveruiandroid.ui.folder.FolderView
@@ -20,12 +22,18 @@ class MainActivity : ComponentActivity() {
             FileServerUiAndroidTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    FolderView(folderId = 0)
+                    Root()
                 }
             }
         }
     }
 
+    @Composable
+    fun Root() {
+        var id: Int by remember { mutableStateOf(0) }
+        FolderView(folderId = id) { id = it.id }
+        Text(text = id.toString())
+    }
 }
 
 
