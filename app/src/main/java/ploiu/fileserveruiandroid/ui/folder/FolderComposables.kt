@@ -6,13 +6,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ploiu.fileserveruiandroid.R
@@ -30,11 +34,11 @@ fun FolderView(model: FolderViewModel = viewModel(), folderId: Int) {
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 30.dp),
+        contentPadding = PaddingValues(vertical = 30.dp, horizontal = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(folders) { folder -> Folder(folder) }
+        items(items = folders, key = FolderApi::id) { Folder(it) }
     }
 
 }
@@ -43,13 +47,32 @@ fun FolderView(model: FolderViewModel = viewModel(), folderId: Int) {
 fun Folder(folder: FolderApi) {
     Card(modifier = Modifier
         .height(55.dp)
-        .clickable { println("clicked!") }
-        .fillMaxSize(),
-        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.primary)
+        .clickable { println("Clicked ${folder.id}") }
+        .fillMaxSize()
     ) {
-        Row {
-            Image(painter = painterResource(id = R.drawable.folder), contentDescription = null)
-            Text(text = folder.path)
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.folder),
+                contentDescription = null,
+                Modifier.padding(horizontal = 5.dp)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = folder.path,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth(0.75f)
+            )
+            Spacer(modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight())
+            // folder options menu
+            IconButton(onClick = { println("Menu clicked for ${folder.id}") }) {
+                Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Options")
+            }
         }
     }
 }
