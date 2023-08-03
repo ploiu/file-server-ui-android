@@ -22,23 +22,48 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ploiu.fileserveruiandroid.R
+import ploiu.fileserveruiandroid.model.ContainingFolderViewModel
+import ploiu.fileserveruiandroid.model.FileApi
 import ploiu.fileserveruiandroid.model.FolderApi
-import ploiu.fileserveruiandroid.model.FolderViewModel
 
 
+/**
+ * draws the contents of the current folder
+ */
 @Composable
-fun FolderView(model: FolderViewModel = hiltViewModel(), folderId: Int, onFolderClicked: (FolderApi) -> Unit) {
+fun FolderView(
+    model: ContainingFolderViewModel = hiltViewModel(),
+    folderId: Int,
+    onFolderClicked: (FolderApi) -> Unit,
+    onFileClicked: (FileApi) -> Unit
+) {
     val state by model.uiState.collectAsState()
     model.setFolder(folderId)
-
-    if (state.folder != null) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(vertical = 30.dp, horizontal = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(items = state.folder!!.folders, key = FolderApi::id) { Folder(it, onFolderClicked) }
+    val folder = state.folder
+    if (folder != null) {
+        Column {
+            // list of folders
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(vertical = 30.dp, horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(items = folder.folders, key = FolderApi::id) { Folder(it, onFolderClicked) }
+            }
+            // list of files
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                items(items = folder.files, key = FileApi::id) {
+                    File(
+                        file = it,
+                        onFileClicked = { file -> println(file) })
+                }
+            }
         }
     }
 
@@ -50,7 +75,6 @@ fun Folder(folder: FolderApi, onFolderClicked: (FolderApi) -> Unit) {
     Card(modifier = Modifier
         .height(55.dp)
         .clickable { onFolderClicked(folder) }
-        .fillMaxSize()
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),

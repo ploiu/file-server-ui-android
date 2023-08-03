@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import ploiu.fileserveruiandroid.ServerConfig
 import ploiu.fileserveruiandroid.client.ApiClient
+import ploiu.fileserveruiandroid.client.FileClient
 import ploiu.fileserveruiandroid.client.FolderClient
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
@@ -39,4 +40,7 @@ class HttpModule {
 
     @Provides
     fun FolderClient(retrofit: Retrofit): FolderClient = retrofit.create(FolderClient::class.java)
+
+    @Provides
+    fun FileClient(retrofit: Retrofit): FileClient = retrofit.create(FileClient::class.java)
 }

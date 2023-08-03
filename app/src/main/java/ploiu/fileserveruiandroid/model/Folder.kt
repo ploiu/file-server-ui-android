@@ -20,21 +20,21 @@ data class FolderApi(
     @JsonProperty("files") val files: List<FileApi>
 )
 
-data class FolderViewState(val folder: FolderApi? = null, val errorMessage: String = "")
+data class ContainingFolderViewState(val folder: FolderApi? = null, val errorMessage: String = "")
 
 @HiltViewModel
-class FolderViewModel @Inject constructor(private val client: FolderClient, private val mapper: ObjectMapper) :
+class ContainingFolderViewModel @Inject constructor(private val client: FolderClient, private val mapper: ObjectMapper) :
     ViewModel() {
-    private val _uiState = MutableStateFlow(FolderViewState())
-    val uiState: StateFlow<FolderViewState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(ContainingFolderViewState())
+    val uiState: StateFlow<ContainingFolderViewState> = _uiState.asStateFlow()
 
     fun setFolder(id: Int) {
         viewModelScope.launch {
             val res = client.getFolder(id)
             if (res.isSuccessful) {
-                _uiState.value = FolderViewState(folder = res.body())
+                _uiState.value = ContainingFolderViewState(folder = res.body())
             } else {
-                _uiState.value = FolderViewState(
+                _uiState.value = ContainingFolderViewState(
                     errorMessage = mapper.readValue(
                         res.errorBody().toString(),
                         ErrorResponse::class.java

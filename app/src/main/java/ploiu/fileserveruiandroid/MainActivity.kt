@@ -31,8 +31,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun Root() {
         var id: Int by remember { mutableStateOf(0) }
-        FolderView(folderId = id) { id = it.id }
-        Text(text = id.toString())
+        FolderView(folderId = id, onFolderClicked = { id = it.id }, onFileClicked = {})
     }
 }
 
