@@ -35,4 +35,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+/.idea
 app-example
+config.json
+
+# don't include bundled certs
+android/app/src/main/assets/*.cer
