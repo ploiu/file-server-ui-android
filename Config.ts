@@ -1,8 +1,5 @@
 import rawConfigFile from "@/assets/config.json";
-import {
-  fetch as sslFetch,
-  ReactNativeSSLPinning,
-} from "react-native-ssl-pinning";
+import {fetch as sslFetch, ReactNativeSSLPinning,} from "react-native-ssl-pinning";
 
 export type ServerConfig = {
   /** ip address and port */
@@ -97,6 +94,11 @@ export async function apiFetch(
     ...options,
     ...certOptions,
   };
+  if (globalThis.credentials) {
+    const headers = fetchOptions.headers ?? {};
+    headers.Authorization = `Basic ${globalThis.credentials}`
+    fetchOptions.headers = headers;
+  }
   const url = `${APP_CONFIG.address}/${path.replace(/^\//, "")}`;
   try {
     return await sslFetch(url, fetchOptions);

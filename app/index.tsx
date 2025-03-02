@@ -3,13 +3,14 @@ import {useEffect, useRef, useState} from "react";
 import {isCompatible, passwordCheck} from "@/client/ApiClient";
 import {Button, Modal, Portal, TextInput} from "react-native-paper";
 import {router} from "expo-router";
+import {handleCredentials, saveCredentials} from "@/util/securityHelper";
 
 enum states {
-  INITIAL = "INITIAL",
-  BAD_CREDS = "BAD_CREDS",
-  INCOMPATIBLE_VERSION = "INCOMPATIBLE_VERSION",
+  INITIAL,
+  BAD_CREDS,
+  INCOMPATIBLE_VERSION,
   // catch-all error
-  ERROR = "ERROR",
+  ERROR,
 }
 
 export default function Index() {
@@ -25,9 +26,11 @@ export default function Index() {
 
   useEffect(() => {
     isCompatible()
-      .then((compatible) => {
+      .then(async (compatible) => {
         if (!compatible) {
           setCurrentState(states.INCOMPATIBLE_VERSION);
+        } else if (await handleCredentials()) {
+          router.navigate("/folders/0")
         }
       });
   }, []);
@@ -36,6 +39,8 @@ export default function Index() {
     try {
       const credsValid = await passwordCheck(username, password);
       if (credsValid) {
+        await saveCredentials(username, password)
+        globalThis.credentials = btoa(`${username}:${password}`)
         router.navigate("/folders/0");
       } else {
         setCurrentState(states.BAD_CREDS);
