@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.fileserveruiandroid"
+      "package": "dev.ploiu.fileserveruiandroid"
     },
     "web": {
       "bundler": "metro",

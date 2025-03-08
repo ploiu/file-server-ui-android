@@ -1,9 +1,9 @@
-import {StyleSheet, Text, View} from "react-native";
-import {useEffect, useRef, useState} from "react";
-import {isCompatible, passwordCheck} from "@/client/ApiClient";
-import {Button, Modal, Portal, TextInput} from "react-native-paper";
-import {router} from "expo-router";
-import {handleCredentials, saveCredentials} from "@/util/securityHelper";
+import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { isCompatible, passwordCheck } from "@/client/ApiClient";
+import { Button, Modal, Portal, TextInput } from "react-native-paper";
+import { router } from "expo-router";
+import { handleCredentials, saveCredentials } from "@/util/securityHelper";
 
 enum states {
   INITIAL,
@@ -30,7 +30,7 @@ export default function Index() {
         if (!compatible) {
           setCurrentState(states.INCOMPATIBLE_VERSION);
         } else if (await handleCredentials()) {
-          router.navigate("/folders/0")
+          router.navigate("/folders/0");
         }
       });
   }, []);
@@ -39,8 +39,8 @@ export default function Index() {
     try {
       const credsValid = await passwordCheck(username, password);
       if (credsValid) {
-        await saveCredentials(username, password)
-        globalThis.credentials = btoa(`${username}:${password}`)
+        await saveCredentials(username, password);
+        globalThis.credentials = btoa(`${username}:${password}`);
         router.navigate("/folders/0");
       } else {
         setCurrentState(states.BAD_CREDS);
