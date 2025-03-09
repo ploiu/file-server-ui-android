@@ -1,9 +1,10 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { FolderApi } from "@/models";
+import React, { useEffect, useState } from "react";
+import { FileApi, FolderApi, isFolder } from "@/models";
 import { getFolderMetadata } from "@/client/FolderClient";
 import FolderEntry from "@/app/components/FolderEntry";
+import FileEntry from "@/app/components/FileEntry";
 
 enum States {
   LOADING,
@@ -17,6 +18,7 @@ enum States {
 export default function FolderView() {
   const [metadata, setMetadata] = useState<FolderApi>();
   const [state, setState] = useState(States.LOADING);
+  const [combined, setCombined] = useState<Array<FolderApi | FileApi>>([]);
   const { id } = useLocalSearchParams();
 
   const pullFolderMetadata = async () => {
@@ -24,6 +26,10 @@ export default function FolderView() {
     try {
       const info = await getFolderMetadata(parseInt(id as string));
       setMetadata(info);
+      setCombined([
+        ...info.folders.sort((a, b) => a.name.localeCompare(b.name)),
+        ...info.files.sort((a, b) => a.name.localeCompare(b.name)),
+      ]);
       setState(States.LOADED);
     } catch (e) {
       console.trace(e);
@@ -36,12 +42,18 @@ export default function FolderView() {
     pullFolderMetadata();
   }, [id]);
 
+  const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {
+    return isFolder(item)
+      ? <FolderEntry folder={item} />
+      : <FileEntry file={item} />;
+  };
+
   return (
     <View>
       <FlatList
         style={styles.list}
-        data={metadata?.folders}
-        renderItem={({ item }) => <FolderEntry folder={item} />}
+        data={combined}
+        renderItem={({ item }) => folderOrFileEntry(item)}
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
         onRefresh={pullFolderMetadata}

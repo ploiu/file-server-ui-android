@@ -25,6 +25,28 @@ export type FileApi = {
   fileType?: string;
 };
 
+export enum FileTypes {
+  Application,
+  Archive,
+  Audio,
+  Cad,
+  Code,
+  Configuration,
+  Diagram,
+  Document,
+  Font,
+  Rom,
+  Image,
+  Material,
+  Model,
+  Object,
+  Presentation,
+  SaveFile,
+  Spreadsheet,
+  Text,
+  Video,
+}
+
 export type CreateFolderRequest = {
   name: string;
   parentId?: number;
@@ -72,3 +94,11 @@ export type UpdatePassword = {
 };
 
 // =====================
+
+export function isFolder(item: FolderApi | FileApi): item is FolderApi {
+  return "folders" in item;
+}
+
+export function isFile(item: FolderApi | FileApi): item is FileApi {
+  return !isFolder(item);
+}
