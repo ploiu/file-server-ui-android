@@ -93,6 +93,8 @@ export type UpdatePassword = {
   newAuth: CreatePassword;
 };
 
+export type FolderPreviews = Record<string, number[]>;
+
 // =====================
 
 export function isFolder(item: FolderApi | FileApi): item is FolderApi {

@@ -1,10 +1,12 @@
 import { FileApi, FileTypes } from "@/models";
 import { Surface, Text, useTheme } from "react-native-paper";
-import { StyleSheet, TouchableWithoutFeedback } from "react-native";
+import { Image, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { Icons, PloiuCon } from "@/PloiuCon";
+import { useEffect, useState } from "react";
 
 type FileEntryProps = {
   file: FileApi;
+  preview?: number[];
 };
 
 function determineIcon(type?: string): Icons {
@@ -59,10 +61,19 @@ function determineIcon(type?: string): Icons {
 
 const FileEntry = (props: FileEntryProps) => {
   const theme = useTheme();
+  const [preview, setPreview] = useState<string>();
 
   const select = () => {
     console.log("file tapped");
   };
+
+  useEffect(() => {
+    if (props.preview) {
+      setPreview(btoa(String.fromCharCode.apply(null, props.preview)));
+    } else {
+      setPreview(undefined);
+    }
+  }, [props.preview]);
 
   return (
     <TouchableWithoutFeedback onPress={select}>
@@ -70,10 +81,19 @@ const FileEntry = (props: FileEntryProps) => {
         elevation={1}
         style={{ ...styles.surface, borderRadius: theme.roundness }}
       >
-        <PloiuCon
-          icon={determineIcon(props.file.fileType)}
-          style={{ width: 75, height: 75 }}
-        />
+        {preview
+          ? (
+            <Image
+              source={{ uri: `data:image/png;base64,${preview}` }}
+              style={styles.image}
+            />
+          )
+          : (
+            <PloiuCon
+              icon={determineIcon(props.file.fileType)}
+              style={styles.image}
+            />
+          )}
         <Text>{props.file.name}</Text>
       </Surface>
     </TouchableWithoutFeedback>
@@ -85,8 +105,14 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 8,
     paddingBottom: 10,
+    paddingTop: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  image: {
+    width: 112,
+    height: 112,
+    resizeMode: "contain",
   },
 });
 

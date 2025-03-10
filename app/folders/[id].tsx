@@ -1,8 +1,8 @@
 import { FlatList, StyleSheet, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { FileApi, FolderApi, isFolder } from "@/models";
-import { getFolderMetadata } from "@/client/FolderClient";
+import { FileApi, FolderApi, FolderPreviews, isFolder } from "@/models";
+import { getFolderMetadata, getFolderPreviews } from "@/client/FolderClient";
 import FolderEntry from "@/app/components/FolderEntry";
 import FileEntry from "@/app/components/FileEntry";
 
@@ -19,6 +19,7 @@ export default function FolderView() {
   const [metadata, setMetadata] = useState<FolderApi>();
   const [state, setState] = useState(States.LOADING);
   const [combined, setCombined] = useState<Array<FolderApi | FileApi>>([]);
+  const [previews, setPreviews] = useState<FolderPreviews>({});
   const { id } = useLocalSearchParams();
 
   const pullFolderMetadata = async () => {
@@ -40,12 +41,14 @@ export default function FolderView() {
 
   useEffect(() => {
     pullFolderMetadata();
+    getFolderPreviews(Number.parseInt(id as string))
+      .then(setPreviews);
   }, [id]);
 
   const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {
     return isFolder(item)
       ? <FolderEntry folder={item} />
-      : <FileEntry file={item} />;
+      : <FileEntry file={item} preview={previews[String(item.id)]} />;
   };
 
   return (
