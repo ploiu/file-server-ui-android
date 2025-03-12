@@ -2,7 +2,7 @@ import { FileApi, FileTypes } from "@/models";
 import { Surface, Text, useTheme } from "react-native-paper";
 import { Image, StyleSheet, TouchableWithoutFeedback } from "react-native";
 import { Icons, PloiuCon } from "@/PloiuCon";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
 type FileEntryProps = {
   file: FileApi;
@@ -59,7 +59,7 @@ function determineIcon(type?: string): Icons {
   }
 }
 
-const FileEntry = (props: FileEntryProps) => {
+const FileEntry = memo(function FileEntry(props: FileEntryProps) {
   const theme = useTheme();
   const [preview, setPreview] = useState<string>();
 
@@ -98,7 +98,7 @@ const FileEntry = (props: FileEntryProps) => {
       </Surface>
     </TouchableWithoutFeedback>
   );
-};
+}, (previous, next) => previous.preview?.length === next.preview?.length);
 
 const styles = StyleSheet.create({
   surface: {

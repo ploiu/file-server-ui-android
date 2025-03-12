@@ -10,5 +10,6 @@ export async function getFolderMetadata(id: number): Promise<FolderApi> {
 //  also maybe consider proactively pulling the previews for all folders that are direct root folders, as well as the root folder
 export async function getFolderPreviews(folderId: number): Promise<FolderPreviews> {
   const response = await apiFetch(`/folders/preview/${folderId}`)
+  console.log('previews retrieved')
   return await response.json();
 }
