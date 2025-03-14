@@ -93,7 +93,7 @@ export type UpdatePassword = {
   newAuth: CreatePassword;
 };
 
-export type FolderPreviews = Record<string, number[]>;
+export type FolderPreviews = Map<number, string>;
 
 // =====================
 

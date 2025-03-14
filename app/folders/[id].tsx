@@ -5,6 +5,7 @@ import { FileApi, FolderApi, FolderPreviews, isFolder } from "@/models";
 import { getFolderMetadata, getFolderPreviews } from "@/client/FolderClient";
 import FolderEntry from "@/app/components/FolderEntry";
 import FileEntry from "@/app/components/FileEntry";
+import {cacheFolderPreviews, clearFolderPreviewCache} from "@/util/cacheUtil";
 
 enum States {
   LOADING,
@@ -19,7 +20,7 @@ export default function FolderView() {
   const [metadata, setMetadata] = useState<FolderApi>();
   const [state, setState] = useState(States.LOADING);
   const [combined, setCombined] = useState<Array<FolderApi | FileApi>>([]);
-  const [previews, setPreviews] = useState<FolderPreviews>({});
+  const [previews, setPreviews] = useState<FolderPreviews>(new Map());
   const { id } = useLocalSearchParams();
 
   const pullFolderMetadata = async () => {
@@ -32,6 +33,7 @@ export default function FolderView() {
         ...info.files.sort((a, b) => a.name.localeCompare(b.name)),
       ]);
       setState(States.LOADED);
+      return info
     } catch (e) {
       console.trace(e);
       // TODO show error screen instead of list
@@ -40,16 +42,32 @@ export default function FolderView() {
   };
 
   useEffect(() => {
-    pullFolderMetadata();
-    getFolderPreviews(Number.parseInt(id as string))
-      .then(setPreviews);
+    pullFolderMetadata()
+      .then(async folder => {
+        if(folder) {
+          const previews = await getFolderPreviews(folder)
+          setPreviews(previews)
+        }
+      })
   }, [id]);
 
   const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {
     return isFolder(item)
       ? <FolderEntry folder={item} />
-      : <FileEntry file={item} preview={previews[String(item.id)]} />;
+      : <FileEntry file={item} preview={previews.get(item.id)} />;
   };
+
+  // clear cache and re-pull folder
+  const refreshList = async () => {
+    if(metadata) {
+      await clearFolderPreviewCache(metadata)
+      const folder = await pullFolderMetadata()
+      if(folder) {
+        const previews = await getFolderPreviews(folder)
+        setPreviews(previews)
+      }
+    }
+  }
 
   return (
     <View>
@@ -59,7 +77,7 @@ export default function FolderView() {
         renderItem={({ item }) => folderOrFileEntry(item)}
         keyExtractor={(item) => String(item.id)}
         numColumns={2}
-        onRefresh={pullFolderMetadata}
+        onRefresh={refreshList}
         refreshing={state === States.LOADING}
       />
     </View>

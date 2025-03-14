@@ -6,7 +6,8 @@ import { memo, useEffect, useState } from "react";
 
 type FileEntryProps = {
   file: FileApi;
-  preview?: number[];
+  // base64 string
+  preview?: string;
 };
 
 function determineIcon(type?: string): Icons {
@@ -69,7 +70,7 @@ const FileEntry = memo(function FileEntry(props: FileEntryProps) {
 
   useEffect(() => {
     if (props.preview) {
-      setPreview(btoa(String.fromCharCode.apply(null, props.preview)));
+      setPreview(props.preview);
     } else {
       setPreview(undefined);
     }
