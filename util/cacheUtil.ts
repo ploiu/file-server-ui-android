@@ -2,6 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyValuePair } from "@react-native-async-storage/async-storage/lib/typescript/types";
 import { FolderApi, FolderPreviews } from "@/models";
 
+/** list of prefixes used as part of cache keys, to be used by the methods in here to prevent cache collisions */
+enum prefixes {
+  PREVIEW = "@preview_",
+  FOLDER = "@folder_",
+}
+
 /**
  * stores the passed value under the passed key in our cache db. non-string values are converted to JSON first before being stored
  *
@@ -92,42 +98,67 @@ async function getMultipleCacheValues(
   }
 }
 
-export function cacheImage(id: number, contents: string): Promise<void> {
-  return cacheItem(String(id), contents);
-}
+// =================================
 
-export function getCachedImage(id: number): Promise<string | null> {
-  return getCachedItem(String(id));
-}
+export class FolderCache {
+  static #prefix = prefixes.FOLDER;
 
-export async function getFolderPreviewCache(
-  folder: FolderApi,
-): Promise<FolderPreviews> {
-  const retrieved = await getMultipleCacheValues(
-    folder.files.map((file) => String(file.id)),
-  );
-  const cacheDict = new Map<number, string>();
-  for (const [key, value] of retrieved) {
-    if (value) {
-      cacheDict.set(Number.parseInt(key), value);
+  static async store(folder: FolderApi) {
+    return cacheItem(this.#prefix + folder.id, folder);
+  }
+
+  static async get(id: number): Promise<FolderApi | null> {
+    return getCachedItem(this.#prefix + id);
+  }
+
+  static async delete(folder: FolderApi): Promise<void> {
+    // deleting the cache for a folder means that we should delete the cache for its previews and child folders too
+    PreviewCache.deleteForFolder(folder);
+    for (const child of folder.folders) {
+      this.delete(child);
     }
+    return deleteCacheItem(this.#prefix + folder.id);
   }
-  return cacheDict;
 }
 
-export async function clearFolderPreviewCache(
-  folder: FolderApi,
-): Promise<void> {
-  return deleteMultipleCacheItems(folder.files.map((file) => String(file.id)));
-}
+export class PreviewCache {
+  static #prefix = prefixes.PREVIEW;
 
-export async function cacheFolderPreviews(
-  previews: FolderPreviews,
-): Promise<void> {
-  const promises: Promise<void>[] = [];
-  for (const [key, base64] of previews.entries()) {
-    promises.push(cacheImage(key, base64));
+  static async store(id: number, contents: string): Promise<void> {
+    return cacheItem(this.#prefix + String(id), contents);
   }
 
-  return Promise.all(promises).then();
+  static async get(id: number): Promise<string | null> {
+    return getCachedItem(this.#prefix + id);
+  }
+
+  static async getForFolder(folder: FolderApi): Promise<FolderPreviews> {
+    const retrieved = await getMultipleCacheValues(
+      folder.files.map((file) => this.#prefix + String(file.id)),
+    );
+    const cacheDict = new Map<number, string>();
+    for (const [key, value] of retrieved) {
+      if (value) {
+        cacheDict.set(Number.parseInt(key.replace(this.#prefix, "")), value);
+      }
+    }
+    return cacheDict;
+  }
+
+  static async storeForFolder(previews: FolderPreviews): Promise<void> {
+    const promises: Promise<void>[] = [];
+    for (const [key, base64] of previews.entries()) {
+      promises.push(this.store(key, base64));
+    }
+
+    await Promise.all(promises);
+  }
+
+  static async deleteForFolder(
+    folder: FolderApi,
+  ): Promise<void> {
+    return deleteMultipleCacheItems(
+      folder.files.map((file) => this.#prefix + file.id),
+    );
+  }
 }

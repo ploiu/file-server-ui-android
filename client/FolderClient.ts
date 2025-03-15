@@ -1,18 +1,21 @@
 import { apiFetch } from "@/Config";
 import { FolderApi, FolderPreviews } from "@/models";
-import { cacheFolderPreviews, getFolderPreviewCache } from "@/util/cacheUtil";
+import { FolderCache, PreviewCache } from "@/util/cacheUtil";
 
 export async function getFolderMetadata(id: number): Promise<FolderApi> {
   const response = await apiFetch(`/folders/metadata/${id}`);
-  return await response.json() as FolderApi;
+  const folderData = await response.json() as FolderApi;
+  // the reason we're storing here but not ever retrieving is that we need to be able to compare for changes for refreshing previews,
+  // but changes could happen frequently so we don't ever want stale data - pulling folder metadata is cheap!
+  await FolderCache.store(folderData);
+  return folderData;
 }
 
-// TODO caching layer since this can take several seconds to deliver
-//  also maybe consider proactively pulling the previews for all folders that are direct root folders, as well as the root folder
+// TODO maybe consider proactively pulling the previews for all folders that are direct root folders, as well as the root folder
 export async function getFolderPreviews(
   folder: FolderApi,
 ): Promise<FolderPreviews> {
-  const cache = await getFolderPreviewCache(folder);
+  const cache = await PreviewCache.getForFolder(folder);
   if (cache.size > 0) {
     return cache;
   }
@@ -25,6 +28,6 @@ export async function getFolderPreviews(
       btoa(String.fromCharCode.apply(null, bytes)),
     );
   }
-  await cacheFolderPreviews(previews);
+  await PreviewCache.storeForFolder(previews);
   return previews;
 }
