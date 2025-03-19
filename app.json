@@ -13,7 +13,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "dev.ploiu.fileserveruiandroid"
+      "package": "dev.ploiu.fileserveruiandroid",
+      "permissions": ["android.permission.VIBRATE"]
     },
     "plugins": [
       "expo-router",

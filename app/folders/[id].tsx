@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, View } from "react-native";
+import {FlatList, StyleSheet, Vibration, View} from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FileApi, FolderApi, FolderPreviews, isFolder } from "@/models";
@@ -81,10 +81,24 @@ export default function FolderView() {
       })
   }, [id]);
 
+
+  /** TODO need to think more on how I want to handle this
+   * long press for drawer with options? short press for drawer but with big preview?
+   *
+   * Google photos does full screen preview, but swiping up opens a bottom drawer with information.
+   *  - I don't _just_ have photos though
+   */
+  const fileEntry = (item: FileApi): React.ReactElement => {
+    const onLongPress = () => {
+      Vibration.vibrate(25)
+    }
+    return <FileEntry file={item} onLongPress={onLongPress} />
+  }
+
   const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {
     return isFolder(item)
       ? <FolderEntry folder={item} />
-      : <FileEntry file={item} preview={previews.get(item.id)} />;
+      : fileEntry(item);
   };
 
   // clear cache and re-pull folder

@@ -89,7 +89,7 @@ function pickImage(img: Icons): ImageRequireSource {
   }
 }
 
-export const PloiuCon = (props: PloiuConProps) => {
+export default function PloiuCon(props: PloiuConProps){
   const baseProps: Omit<PloiuConProps, 'icon'> = props
   return <Image source={pickImage(props.icon)} resizeMode={'contain'} {...baseProps} />
 }

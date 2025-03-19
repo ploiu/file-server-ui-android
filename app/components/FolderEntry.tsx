@@ -1,8 +1,8 @@
-import { FolderApi } from "@/models";
-import { Surface, Text, useTheme } from "react-native-paper";
-import { Image, StyleSheet, TouchableWithoutFeedback } from "react-native";
-import { router } from "expo-router";
-import { PloiuCon } from "@/PloiuCon";
+import {FolderApi} from "@/models";
+import {Surface, Text, useTheme} from "react-native-paper";
+import {StyleSheet, TouchableWithoutFeedback, Vibration} from "react-native";
+import {router} from "expo-router";
+import PloiuCon from "@/app/components/PloiuCon";
 
 type FolderEntryProps = {
   folder: FolderApi;
@@ -11,12 +11,17 @@ type FolderEntryProps = {
 const FolderEntry = (props: FolderEntryProps) => {
   const theme = useTheme();
 
-  const select = () => {
+  const tap = () => {
     router.navigate(`/folders/${props.folder.id}`);
   };
 
+  const pressAndHold = () => {
+    Vibration.vibrate(25)
+    console.log('pressed and held')
+  }
+
   return (
-    <TouchableWithoutFeedback onPress={select}>
+    <TouchableWithoutFeedback onPress={tap} onLongPress={pressAndHold}>
       <Surface
         elevation={1}
         style={{ ...styles.surface, borderRadius: theme.roundness }}

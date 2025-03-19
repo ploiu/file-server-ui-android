@@ -1,13 +1,15 @@
-import { FileApi, FileTypes } from "@/models";
-import { Surface, Text, useTheme } from "react-native-paper";
-import { Image, StyleSheet, TouchableWithoutFeedback } from "react-native";
-import { Icons, PloiuCon } from "@/PloiuCon";
-import { memo, useEffect, useState } from "react";
+import {FileApi, FileTypes} from "@/models";
+import {Surface, Text, useTheme} from "react-native-paper";
+import {Image, StyleSheet, TouchableWithoutFeedback} from "react-native";
+import PloiuCon, {Icons} from "@/app/components/PloiuCon";
+import {memo, useEffect, useState} from "react";
 
 type FileEntryProps = {
   file: FileApi;
   // base64 string
   preview?: string;
+  onLongPress?: () => void;
+  onTap?: () => void;
 };
 
 function determineIcon(type?: string): Icons {
@@ -64,10 +66,6 @@ const FileEntry = memo(function FileEntry(props: FileEntryProps) {
   const theme = useTheme();
   const [preview, setPreview] = useState<string>();
 
-  const select = () => {
-    console.log("file tapped");
-  };
-
   useEffect(() => {
     if (props.preview) {
       setPreview(props.preview);
@@ -77,15 +75,15 @@ const FileEntry = memo(function FileEntry(props: FileEntryProps) {
   }, [props.preview]);
 
   return (
-    <TouchableWithoutFeedback onPress={select}>
+    <TouchableWithoutFeedback onPress={props.onTap} onLongPress={props.onLongPress}>
       <Surface
         elevation={1}
-        style={{ ...styles.surface, borderRadius: theme.roundness }}
+        style={{...styles.surface, borderRadius: theme.roundness}}
       >
         {preview
           ? (
             <Image
-              source={{ uri: `data:image/png;base64,${preview}` }}
+              source={{uri: `data:image/png;base64,${preview}`}}
               style={styles.image}
             />
           )
