@@ -87,6 +87,7 @@ export default function FolderView() {
    *
    * Google photos does full screen preview, but swiping up opens a bottom drawer with information.
    *  - I don't _just_ have photos though
+   *  - maybe if no preview, just open the drawer?
    */
   const fileEntry = (item: FileApi): React.ReactElement => {
     const onLongPress = () => {
