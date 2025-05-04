@@ -6,6 +6,7 @@ import { getFolderMetadata, getFolderPreviews } from "@/client/FolderClient";
 import FolderEntry from "@/app/components/FolderEntry";
 import FileEntry from "@/app/components/FileEntry";
 import {FolderCache, PreviewCache} from "@/util/cacheUtil";
+import {downloadFile} from "@/client/FileClient";
 
 enum States {
   LOADING,
@@ -93,7 +94,7 @@ export default function FolderView() {
     const onLongPress = () => {
       Vibration.vibrate(25)
     }
-    return <FileEntry file={item} onLongPress={onLongPress} />
+    return <FileEntry file={item} onLongPress={onLongPress} preview={previews.get(item.id)} onTap={() => downloadFile(item)} />
   }
 
   const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {

@@ -46,6 +46,7 @@ export default function Index() {
         setCurrentState(states.BAD_CREDS);
       }
     } catch (e) {
+      console.trace('Failed to check password', e)
       setCurrentState(states.ERROR);
       setErrorMessage((e as Error)?.message ?? e);
     }
