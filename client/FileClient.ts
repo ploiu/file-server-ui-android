@@ -1,11 +1,11 @@
 import {BasicMessage, CreateFileRequest, FileApi} from "@/models";
 import {apiFetch} from "@/Config";
-import * as FileSystem from 'expo-file-system'
+import {Dirs, FileSystem} from 'react-native-file-access'
 
 export enum DownloadFileResult {
   SUCCESS,
-  FAIL,
-  PERMISSION_DENIED
+  API_FAILURE,
+  DISK_FAILURE
 }
 
 /**
@@ -83,43 +83,42 @@ export async function getFileMetadata(id: number): Promise<FileApi> {
 }
 
 /**
+ * given the passed `fileUri`, attempts to save the file located at that uri to the album for the file server
+ * @param fileUri the `file://` uri to be saved to the album
+ * @param file
+ */
+async function moveToExternalStorage(fileUri: string, file: FileApi): Promise<boolean> {
+  try {
+    await FileSystem.cpExternal('file:///' + fileUri, file.name, 'downloads')
+  } catch (e) {
+    console.trace('failed to move file to external storage', String(e))
+    return false;
+  }
+  return true;
+}
+
+/**
  * Download a file and save it to the user's Downloads folder
  * @param file The file metadata object
  * @returns Promise<void>
  */
 export async function downloadFile(file: FileApi): Promise<DownloadFileResult> {
-  /*
-    TODO
-      1. prompt for permission
-      2. prompt for location
-      3. check if file already exists
-        i. if it does, return state saying file already exists
-        ii. if not, go to step 4
-      4. call endpoint for download file
-      5. check endpoint result
-      6. write the file to the document directory
-      7. move the file to the location the user selected...find a way to default to the Download folder?
-   */
-  const permissionCheck = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-  console.debug('permission: ', permissionCheck.granted)
-  if (!permissionCheck.granted) {
-    return DownloadFileResult.PERMISSION_DENIED;
-  }
-
+  // initially store the file in the cache directory
+  const cachedFileLocation = Dirs.DocumentDir + file.name;
   const downloadResult = await apiFetch(`/files/${file.id}`, {responseType: 'base64'})
   if (downloadResult.status !== 200) {
     const error = await downloadResult.json() as BasicMessage;
     console.trace('Failed to download file ', error.message)
-    return DownloadFileResult.FAIL;
+    return DownloadFileResult.API_FAILURE;
   }
   // downloadResult.data will never be undefined here because it's populated when we pass base64 for the response type
   const base64Data = downloadResult.data!;
-  console.debug('creating new file at ' + permissionCheck.directoryUri + file.name)
-  // knowing the mime type of any arbitrary file is impossible, especially for novel file types. As such, we are using an unrecognized mime type and passing the file extension, even though the docs say not to
-  const newUri = await FileSystem.StorageAccessFramework.createFileAsync(permissionCheck.directoryUri, file.name, 'application/unknown')
-  console.debug('file created! ', newUri)
-  await FileSystem.StorageAccessFramework.writeAsStringAsync(newUri, base64Data, {encoding: 'base64'})
-  console.debug('moved to ' + permissionCheck.directoryUri + file.name + '!')
+  try {
+    await FileSystem.writeFile(cachedFileLocation, base64Data, 'base64')
+    await moveToExternalStorage(cachedFileLocation, file)
+  } catch (e) {
+    console.trace('Failed to write file to disk or move file to external downloads folder: ', String(e))
+  }
   return DownloadFileResult.SUCCESS;
 }
 
@@ -143,12 +142,12 @@ export async function deleteFile(id: number): Promise<void> {
  * This directory will be cleared when the user clears app storage
  */
 export async function getPreviewCacheDirectory(): Promise<string> {
-  const cacheDir = `${FileSystem.cacheDirectory}previews`;
+  const cacheDir = `${Dirs.CacheDir}previews`;
 
   // make sure the directory exists before doing anything with it
-  const dirInfo = await FileSystem.getInfoAsync(cacheDir);
-  if (!dirInfo.exists) {
-    await FileSystem.makeDirectoryAsync(cacheDir, {intermediates: true});
+  const dirExists = await FileSystem.isDir(cacheDir);
+  if (!dirExists) {
+    await FileSystem.mkdir(cacheDir);
   }
 
   return cacheDir;

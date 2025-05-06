@@ -14,7 +14,9 @@
         "backgroundColor": "#ffffff"
       },
       "package": "dev.ploiu.fileserveruiandroid",
-      "permissions": ["android.permission.VIBRATE"]
+      "permissions": [
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -32,6 +34,14 @@
         "expo-secure-store",
         {
           "configureAndroidBackup": true
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 29
+          }
         }
       ]
     ],
