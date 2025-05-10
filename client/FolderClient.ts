@@ -1,10 +1,10 @@
-import { apiFetch } from "@/Config";
-import { FolderApi, FolderPreviews } from "@/models";
-import { FolderCache, PreviewCache } from "@/util/cacheUtil";
+import { apiFetch } from '@/Config';
+import { FolderApi, FolderPreviews } from '@/models';
+import { FolderCache, PreviewCache } from '@/util/cacheUtil';
 
 export async function getFolderMetadata(id: number): Promise<FolderApi> {
   const response = await apiFetch(`/folders/metadata/${id}`);
-  const folderData = await response.json() as FolderApi;
+  const folderData = (await response.json()) as FolderApi;
   // the reason we're storing here but not ever retrieving is that we need to be able to compare for changes for refreshing previews,
   // but changes could happen frequently so we don't ever want stale data - pulling folder metadata is cheap!
   await FolderCache.store(folderData);
@@ -22,6 +22,7 @@ export async function getFolderPreviews(
   const response = await apiFetch(`/folders/preview/${folder.id}`);
   const rawPreviews: Record<string, number[]> = await response.json();
   const previews: FolderPreviews = new Map();
+  // cache util doesn't let us store raw byte arrays, so convert all the byte arrays to base64 strings
   for (const [id, bytes] of Object.entries(rawPreviews)) {
     previews.set(
       Number.parseInt(id),

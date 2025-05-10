@@ -1,11 +1,11 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { KeyValuePair } from "@react-native-async-storage/async-storage/lib/typescript/types";
-import {FileApi, FolderApi, FolderPreviews} from "@/models";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { KeyValuePair } from '@react-native-async-storage/async-storage/lib/typescript/types';
+import { FileApi, FolderApi, FolderPreviews } from '@/models';
 
 /** list of prefixes used as part of cache keys, to be used by the methods in here to prevent cache collisions */
 enum prefixes {
-  PREVIEW = "@preview_",
-  FOLDER = "@folder_",
+  PREVIEW = '@preview_',
+  FOLDER = '@folder_',
 }
 
 /**
@@ -17,12 +17,12 @@ enum prefixes {
  * @param value
  */
 async function cacheItem(key: string, value: Object | string) {
-  const actualValue = typeof value === "string" ? value : JSON.stringify(value);
+  const actualValue = typeof value === 'string' ? value : JSON.stringify(value);
   try {
     await AsyncStorage.setItem(key.toLowerCase(), actualValue);
   } catch (e) {
     // this is specifically for caching, so we shouldn't interrupt user flow
-    console.trace("failed to cache item " + key, e);
+    console.trace('failed to cache item ' + key, e);
   }
 }
 
@@ -50,7 +50,7 @@ async function getCachedItem<ReturnType = string>(
   try {
     rawValue = await AsyncStorage.getItem(key.toLowerCase());
   } catch (e) {
-    console.trace("failed to retrieve cache value for key " + key, e);
+    console.trace('failed to retrieve cache value for key ' + key, e);
     return null;
   }
   if (rawValue === null) {
@@ -58,7 +58,7 @@ async function getCachedItem<ReturnType = string>(
   }
 
   // there are only 2 things that should ever be stored in the cache - strings or actual js objects.
-  if (!["{", "["].includes(rawValue[0])) {
+  if (!['{', '['].includes(rawValue[0])) {
     return rawValue as ReturnType;
   } else {
     return JSON.parse(rawValue);
@@ -75,15 +75,15 @@ async function deleteCacheItem(key: string): Promise<void> {
   try {
     await AsyncStorage.removeItem(key.toLowerCase());
   } catch (e) {
-    console.trace("failed to delete cache value for key " + key, e);
+    console.trace('failed to delete cache value for key ' + key, e);
   }
 }
 
 async function deleteMultipleCacheItems(keys: string[]): Promise<void> {
   try {
-    await AsyncStorage.multiRemove(keys.map((it) => it.toLowerCase()));
+    await AsyncStorage.multiRemove(keys.map(it => it.toLowerCase()));
   } catch (e) {
-    console.trace("failed to remove multiple caches for keys " + keys, e);
+    console.trace('failed to remove multiple caches for keys ' + keys, e);
   }
 }
 
@@ -93,7 +93,7 @@ async function getMultipleCacheValues(
   try {
     return await AsyncStorage.multiGet(keys);
   } catch (e) {
-    console.trace("failed to retrieve multiple caches for " + keys, e);
+    console.trace('failed to retrieve multiple caches for ' + keys, e);
     return [];
   }
 }
@@ -128,18 +128,22 @@ export class PreviewCache {
     return cacheItem(this.#prefix + String(id), contents);
   }
 
+  /**
+   * retrieves the preview of the file with the passed id as a base64 string, or `null` if no preview exists
+   * @param id
+   */
   static async get(id: number): Promise<string | null> {
     return getCachedItem(this.#prefix + id);
   }
 
   static async getForFolder(folder: FolderApi): Promise<FolderPreviews> {
     const retrieved = await getMultipleCacheValues(
-      folder.files.map((file) => this.#prefix + String(file.id)),
+      folder.files.map(file => this.#prefix + String(file.id)),
     );
     const cacheDict = new Map<number, string>();
     for (const [key, value] of retrieved) {
       if (value) {
-        cacheDict.set(Number.parseInt(key.replace(this.#prefix, "")), value);
+        cacheDict.set(Number.parseInt(key.replace(this.#prefix, '')), value);
       }
     }
     return cacheDict;
@@ -154,11 +158,9 @@ export class PreviewCache {
     await Promise.all(promises);
   }
 
-  static async deleteForFolder(
-    folder: FolderApi,
-  ): Promise<void> {
+  static async deleteForFolder(folder: FolderApi): Promise<void> {
     return deleteMultipleCacheItems(
-      folder.files.map((file) => this.#prefix + file.id),
+      folder.files.map(file => this.#prefix + file.id),
     );
   }
 }

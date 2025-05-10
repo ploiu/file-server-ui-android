@@ -1,12 +1,11 @@
-import {FlatList, StyleSheet, Vibration, View} from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { FileApi, FolderApi, FolderPreviews, isFolder } from "@/models";
-import { getFolderMetadata, getFolderPreviews } from "@/client/FolderClient";
-import FolderEntry from "@/app/components/FolderEntry";
-import FileEntry from "@/app/components/FileEntry";
-import {FolderCache, PreviewCache} from "@/util/cacheUtil";
-import {downloadFile} from "@/client/FileClient";
+import { FlatList, StyleSheet, Vibration, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { FileApi, FolderApi, FolderPreviews, isFolder } from '@/models';
+import { getFolderMetadata, getFolderPreviews } from '@/client/FolderClient';
+import FolderEntry from '@/app/components/FolderEntry';
+import FileEntry from '@/app/components/FileEntry';
+import { FolderCache, PreviewCache } from '@/util/cacheUtil';
 
 enum States {
   LOADING,
@@ -15,46 +14,49 @@ enum States {
   // TODO maybe these 2 have too much data to show as a modal?
   FOLDER_INFO,
   FILE_INFO,
-  SELECTING
+  SELECTING,
 }
 
 export default function FolderView() {
   const [metadata, setMetadata] = useState<FolderApi>();
   const [state, setState] = useState(States.LOADING);
-  const [combined, setCombined] = useState<Array<FolderApi | FileApi>>([]);
+  const [combined, setCombined] = useState<(FolderApi | FileApi)[]>([]);
   const [previews, setPreviews] = useState<FolderPreviews>(new Map());
   const { id } = useLocalSearchParams();
 
-  const handlePreviews = async (cached: FolderApi | null, current : FolderApi) => {
+  const handlePreviews = async (
+    cached: FolderApi | null,
+    current: FolderApi,
+  ) => {
     // if the cached folder is different than the current, that means we need to refresh preview cache
-    if(!cached) {
-     setPreviews(await getFolderPreviews(current))
+    if (!cached) {
+      setPreviews(await getFolderPreviews(current));
     } else {
-      const cachedFiles = cached.files.map(f => String(f.name) + f.id)
-      const currentFiles = current.files.map(f => String(f.name) + f.id)
+      const cachedFiles = cached.files.map(f => String(f.name) + f.id);
+      const currentFiles = current.files.map(f => String(f.name) + f.id);
       let lengthsDifferent = cachedFiles.length !== currentFiles.length;
       let anyDifferent = false;
-      for(const cachedEntry of cachedFiles) {
-        if(!currentFiles.includes(cachedEntry)) {
+      for (const cachedEntry of cachedFiles) {
+        if (!currentFiles.includes(cachedEntry)) {
           anyDifferent = true;
           break;
         }
       }
-      if(lengthsDifferent || anyDifferent) {
-        console.log('lists donnot match! clearing preview cache...')
+      if (lengthsDifferent || anyDifferent) {
+        console.debug('lists do not match! clearing preview cache...');
         // list is different, we need to delete preview cache and re-pull it to make sure we're up-to-date
-        await PreviewCache.deleteForFolder(current)
-        setPreviews(await getFolderPreviews(current))
+        await PreviewCache.deleteForFolder(current);
+        setPreviews(await getFolderPreviews(current));
         return;
       }
     }
-  }
+  };
 
   const pullFolderMetadata = async () => {
     setState(States.LOADING);
     try {
-      const parsedId = parseInt(id as string)
-      const cached = await FolderCache.get(parsedId)
+      const parsedId = parseInt(id as string);
+      const cached = await FolderCache.get(parsedId);
       const info = await getFolderMetadata(parsedId);
       setMetadata(info);
       setCombined([
@@ -63,8 +65,8 @@ export default function FolderView() {
       ]);
       setState(States.LOADED);
       // await isn't needed here because it just holds up the return and isn't necessary for immediate rendering
-      handlePreviews(cached, info)
-      return info
+      handlePreviews(cached, info);
+      return info;
     } catch (e) {
       console.trace(e);
       // TODO show error screen instead of list
@@ -73,15 +75,13 @@ export default function FolderView() {
   };
 
   useEffect(() => {
-    pullFolderMetadata()
-      .then(async folder => {
-        if(folder) {
-          const previews = await getFolderPreviews(folder)
-          setPreviews(previews)
-        }
-      })
+    pullFolderMetadata().then(async folder => {
+      if (folder) {
+        const previews = await getFolderPreviews(folder);
+        setPreviews(previews);
+      }
+    });
   }, [id]);
-
 
   /** TODO need to think more on how I want to handle this
    * long press for drawer with options? short press for drawer but with big preview?
@@ -92,25 +92,30 @@ export default function FolderView() {
    */
   const fileEntry = (item: FileApi): React.ReactElement => {
     const onLongPress = () => {
-      Vibration.vibrate(25)
-    }
-    return <FileEntry file={item} onLongPress={onLongPress} preview={previews.get(item.id)} onTap={() => downloadFile(item)} />
-  }
+      Vibration.vibrate(25);
+    };
+    return (
+      <FileEntry
+        file={item}
+        onLongPress={onLongPress}
+        preview={previews.get(item.id)}
+        onTap={() => router.navigate(`/files/${item.id}`)}
+      />
+    );
+  };
 
   const folderOrFileEntry = (item: FolderApi | FileApi): React.ReactElement => {
-    return isFolder(item)
-      ? <FolderEntry folder={item} />
-      : fileEntry(item);
+    return isFolder(item) ? <FolderEntry folder={item} /> : fileEntry(item);
   };
 
   // clear cache and re-pull folder
   const refreshList = async () => {
-    if(metadata) {
-      await PreviewCache.deleteForFolder(metadata)
+    if (metadata) {
+      await PreviewCache.deleteForFolder(metadata);
       // await not needed here because all the needed processing is in the function
-      pullFolderMetadata()
+      pullFolderMetadata();
     }
-  }
+  };
 
   return (
     <View>
@@ -118,7 +123,7 @@ export default function FolderView() {
         style={styles.list}
         data={combined}
         renderItem={({ item }) => folderOrFileEntry(item)}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={item => String(item.id)}
         numColumns={2}
         onRefresh={refreshList}
         refreshing={state === States.LOADING}

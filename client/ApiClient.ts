@@ -1,9 +1,9 @@
-import { Version } from "@/models";
-import { apiFetch, APP_CONFIG } from "@/Config";
+import { Version } from '@/models';
+import { apiFetch, APP_CONFIG } from '@/Config';
 
 async function getVersion(): Promise<Version> {
-  const res = await apiFetch("/api/version");
-  return await res.json() as Version;
+  const res = await apiFetch('/api/version');
+  return (await res.json()) as Version;
 }
 
 export async function isCompatible(): Promise<boolean> {
@@ -19,9 +19,9 @@ export async function passwordCheck(
   username: string,
   password: string,
 ): Promise<boolean> {
-  const res = await apiFetch("/api/disk", {
+  const res = await apiFetch('/api/disk', {
     headers: {
-      authorization: `Basic ${btoa(username + ":" + password)}`,
+      authorization: `Basic ${btoa(username + ':' + password)}`,
     },
   });
   return res.status === 200;

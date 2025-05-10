@@ -1,11 +1,12 @@
-import {BasicMessage, CreateFileRequest, FileApi} from "@/models";
-import {apiFetch} from "@/Config";
-import {Dirs, FileSystem} from 'react-native-file-access'
+import { BasicMessage, CreateFileRequest, FileApi } from '@/models';
+import { apiFetch } from '@/Config';
+import { Dirs, FileSystem } from 'react-native-file-access';
+import { PreviewCache } from '@/util/cacheUtil';
 
 export enum DownloadFileResult {
   SUCCESS,
   API_FAILURE,
-  DISK_FAILURE
+  DISK_FAILURE,
 }
 
 /**
@@ -14,7 +15,10 @@ export enum DownloadFileResult {
  * @param force Whether to force overwrite any file with the same name
  * @returns The uploaded file metadata
  */
-export async function uploadFile(fileData: CreateFileRequest, force: boolean = false): Promise<FileApi> {
+export async function uploadFile(
+  fileData: CreateFileRequest,
+  force: boolean = false,
+): Promise<FileApi> {
   const formData = new FormData();
   formData.append('file', fileData.file);
   formData.append('extension', fileData.extension);
@@ -32,11 +36,11 @@ export async function uploadFile(fileData: CreateFileRequest, force: boolean = f
   });
 
   if (response.status !== 201) {
-    const errorData = await response.json() as BasicMessage;
+    const errorData = (await response.json()) as BasicMessage;
     throw new Error(`Failed to upload file: ${errorData.message}`);
   }
 
-  return await response.json() as FileApi;
+  return (await response.json()) as FileApi;
 }
 
 /**
@@ -54,16 +58,20 @@ export async function updateFile(fileData: FileApi): Promise<FileApi> {
   });
 
   if (response.status !== 200) {
-    const errorData = await response.json() as BasicMessage;
+    const errorData = (await response.json()) as BasicMessage;
     throw new Error(`Failed to update file: ${errorData.message}`);
   }
 
-  return await response.json() as FileApi;
+  return (await response.json()) as FileApi;
 }
 
 // TODO full implementation
-export async function searchFiles(search?: string, tags?: string[], attributes?: string[]): Promise<FileApi[]> {
-  throw new Error('unimplemented')
+export async function searchFiles(
+  search?: string,
+  tags?: string[],
+  attributes?: string[],
+): Promise<FileApi[]> {
+  throw new Error('unimplemented');
 }
 
 /**
@@ -75,11 +83,11 @@ export async function getFileMetadata(id: number): Promise<FileApi> {
   const response = await apiFetch(`/files/metadata/${id}`);
 
   if (response.status !== 200) {
-    const errorData = await response.json() as BasicMessage;
+    const errorData = (await response.json()) as BasicMessage;
     throw new Error(`Failed to get file metadata: ${errorData.message}`);
   }
 
-  return await response.json() as FileApi;
+  return (await response.json()) as FileApi;
 }
 
 /**
@@ -87,11 +95,14 @@ export async function getFileMetadata(id: number): Promise<FileApi> {
  * @param fileUri the `file://` uri to be saved to the album
  * @param file
  */
-async function moveToExternalStorage(fileUri: string, file: FileApi): Promise<boolean> {
+async function moveToExternalStorage(
+  fileUri: string,
+  file: FileApi,
+): Promise<boolean> {
   try {
-    await FileSystem.cpExternal('file:///' + fileUri, file.name, 'downloads')
+    await FileSystem.cpExternal('file:///' + fileUri, file.name, 'downloads');
   } catch (e) {
-    console.trace('failed to move file to external storage', String(e))
+    console.trace('failed to move file to external storage', String(e));
     return false;
   }
   return true;
@@ -105,19 +116,24 @@ async function moveToExternalStorage(fileUri: string, file: FileApi): Promise<bo
 export async function downloadFile(file: FileApi): Promise<DownloadFileResult> {
   // initially store the file in the cache directory
   const cachedFileLocation = Dirs.DocumentDir + file.name;
-  const downloadResult = await apiFetch(`/files/${file.id}`, {responseType: 'base64'})
+  const downloadResult = await apiFetch(`/files/${file.id}`, {
+    responseType: 'base64',
+  });
   if (downloadResult.status !== 200) {
-    const error = await downloadResult.json() as BasicMessage;
-    console.trace('Failed to download file ', error.message)
+    const error = (await downloadResult.json()) as BasicMessage;
+    console.trace('Failed to download file ', error.message);
     return DownloadFileResult.API_FAILURE;
   }
   // downloadResult.data will never be undefined here because it's populated when we pass base64 for the response type
   const base64Data = downloadResult.data!;
   try {
-    await FileSystem.writeFile(cachedFileLocation, base64Data, 'base64')
-    await moveToExternalStorage(cachedFileLocation, file)
+    await FileSystem.writeFile(cachedFileLocation, base64Data, 'base64');
+    await moveToExternalStorage(cachedFileLocation, file);
   } catch (e) {
-    console.trace('Failed to write file to disk or move file to external downloads folder: ', String(e))
+    console.trace(
+      'Failed to write file to disk or move file to external downloads folder: ',
+      String(e),
+    );
   }
   return DownloadFileResult.SUCCESS;
 }
@@ -132,7 +148,7 @@ export async function deleteFile(id: number): Promise<void> {
   });
 
   if (response.status !== 204) {
-    const errorData = await response.json() as BasicMessage;
+    const errorData = (await response.json()) as BasicMessage;
     throw new Error(`Failed to delete file: ${errorData.message}`);
   }
 }
@@ -153,13 +169,30 @@ export async function getPreviewCacheDirectory(): Promise<string> {
   return cacheDir;
 }
 
-
 /**
  * Get a file preview by ID
- * @param id The file ID
- * @returns The path to the cached preview image TODO change this to the actual image preview as base64
+ * @returns The contents of the preview as base64 TODO change this to the actual image preview as base64
+ * @param id
  */
-export async function getFilePreview(id: number): Promise<string> {
-  throw new Error('unimplemented!')
-  // TODO determine app cache directory and store preview there
+export async function getFilePreview(id: number): Promise<string | null> {
+  const cached = await PreviewCache.get(id);
+  if (!cached) {
+    const fetchedCache = await apiFetch(`/files/preview/${id}`, {
+      responseType: 'base64',
+    });
+    // we don't want to throw an error if 404, just return null
+    if (fetchedCache.status === 404) {
+      return null;
+    } else if (fetchedCache.status !== 200) {
+      const { message } = (await fetchedCache.json()) as BasicMessage;
+      throw new Error('Failed to download preview cache for file: ' + message);
+    }
+    // since we requested base64 for the response type, we know data won't be null
+    const data = fetchedCache.data!;
+    // we don't care about waiting on writing to the cache, so no await here
+    PreviewCache.store(id, data);
+    return data;
+  } else {
+    return PreviewCache.get(id);
+  }
 }

@@ -1,9 +1,9 @@
 // it's a pun...get it? Ploiu Icon => PloiuCon
 // ...ok it's bad, but it flows better
 
-import {Image, ImageRequireSource} from "react-native";
-import * as React from "react";
-import {ImageProps} from "react-native/Libraries/Image/Image";
+import { Image, ImageRequireSource } from 'react-native';
+import * as React from 'react';
+import { ImageProps } from 'react-native/Libraries/Image/Image';
 
 const AVAILABLE_ICONS = [
   'file-application',
@@ -28,68 +28,74 @@ const AVAILABLE_ICONS = [
   'file-save',
   'file-spreadsheet',
   'file-text',
-  'file-video'
+  'file-video',
 ] as const;
 
-export type Icons = typeof AVAILABLE_ICONS[number]
+export type Icons = (typeof AVAILABLE_ICONS)[number];
 export type PloiuConProps = Omit<ImageProps, 'source'> & {
-  icon: Icons,
-}
+  icon: Icons;
+};
 
 // TODO because we load so many images at a time, this might have poor performance
 function pickImage(img: Icons): ImageRequireSource {
   // react's require is a bit different from node's, so we can't just use an if statement and have to map out everything manually
-  switch(img) {
-    case "file-application":
+  switch (img) {
+    case 'file-application':
       return require('@/assets/images/application.png');
-    case "file-archive":
+    case 'file-archive':
       return require('@/assets/images/archive.png');
-    case "file-audio":
+    case 'file-audio':
       return require('@/assets/images/audio.png');
-    case "file-cad":
+    case 'file-cad':
       return require('@/assets/images/cad.png');
-    case "file-code":
+    case 'file-code':
       return require('@/assets/images/code.png');
-    case "file-configuration":
+    case 'file-configuration':
       return require('@/assets/images/configuration.png');
-    case "file-diagram":
+    case 'file-diagram':
       return require('@/assets/images/diagram.png');
-    case "file-document":
+    case 'file-document':
       return require('@/assets/images/document.png');
-    case "file-unknown":
+    case 'file-unknown':
       return require('@/assets/images/unknown.png');
-    case "folder":
+    case 'folder':
       return require('@/assets/images/folder.png');
-    case "file-font":
+    case 'file-font':
       return require('@/assets/images/font.png');
-    case "file-image":
+    case 'file-image':
       return require('@/assets/images/image.png');
-    case "file-material":
+    case 'file-material':
       return require('@/assets/images/material.png');
-    case "file-message":
+    case 'file-message':
       return require('@/assets/images/message.png');
-    case "file-model":
+    case 'file-model':
       return require('@/assets/images/model.png');
-    case "file-object":
+    case 'file-object':
       return require('@/assets/images/object.png');
-    case "plus":
+    case 'plus':
       return require('@/assets/images/plus.png');
-    case "file-presentation":
+    case 'file-presentation':
       return require('@/assets/images/presentation.png');
-    case "file-rom":
+    case 'file-rom':
       return require('@/assets/images/rom.png');
-    case "file-save":
+    case 'file-save':
       return require('@/assets/images/savefile.png');
-    case "file-spreadsheet":
+    case 'file-spreadsheet':
       return require('@/assets/images/spreadsheet.png');
-    case "file-text":
+    case 'file-text':
       return require('@/assets/images/text.png');
-    case "file-video":
+    case 'file-video':
       return require('@/assets/images/video.png');
   }
 }
 
-export default function PloiuCon(props: PloiuConProps){
-  const baseProps: Omit<PloiuConProps, 'icon'> = props
-  return <Image source={pickImage(props.icon)} resizeMode={'contain'} {...baseProps} />
+export default function PloiuCon(props: PloiuConProps) {
+  const baseProps: Omit<PloiuConProps, 'icon'> = props;
+  return (
+    <Image
+      source={pickImage(props.icon)}
+      resizeMode={'contain'}
+      {...baseProps}
+    />
+  );
 }
