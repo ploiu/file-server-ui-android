@@ -14,8 +14,9 @@ This is a react native application using expo. The style framework is react-nati
 <dt>Min Android SDK Version</dt><dd>29</dd>
 </dl>
 
->![NOTE]
+> [!NOTE]  
 > in case you run `npx expo prebuild --clean`, you need to add this file to `./android/src/main/res/xml/network_security_config.xml` in order to allow your application to trust user certs
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
