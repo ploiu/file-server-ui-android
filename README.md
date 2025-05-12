@@ -8,3 +8,23 @@ The next thing you'll need is to follow the instructions located in `./assets/co
 
 ## Architecture
 This is a react native application using expo. The style framework is react-native-paper, and it uses Jest for tests. 
+
+<dl>
+<dt>Node Version</dt><dd>22</dd>
+<dt>Min Android SDK Version</dt><dd>29</dd>
+</dl>
+
+>![NOTE]
+> in case you run `npx expo prebuild --clean`, you need to add this file to `./android/src/main/res/xml/network_security_config.xml` in order to allow your application to trust user certs
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
+```
+`cleartextTrafficPermitted="true"` is required for expo dev server to function
+
