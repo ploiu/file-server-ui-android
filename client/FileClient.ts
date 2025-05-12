@@ -128,7 +128,7 @@ export async function downloadFile(
   const cachedFileLocation = documentDirectory + file.name;
   const downloadResult = await downloadAsync(
     `${APP_CONFIG.address}/files/${file.id}`,
-    documentDirectory + file.name,
+    documentDirectory + file.name.toLowerCase(),
     {
       headers: {
         Authorization: `Basic ${globalThis.credentials}`,
