@@ -43,6 +43,12 @@
             "minSdkVersion": 29
           }
         }
+      ],
+      [
+        "./plugins/manifestPlugin.js",
+        {
+          "android:networkSecurityConfig": "@xml/network_security_config"
+        }
       ]
     ],
     "experiments": {

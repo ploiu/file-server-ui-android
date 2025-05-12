@@ -1,8 +1,4 @@
 import rawConfigFile from "@/assets/config.json";
-import {
-  fetch as sslFetch,
-  ReactNativeSSLPinning,
-} from "react-native-ssl-pinning";
 
 export type ServerConfig = {
   /** ip address and port */
@@ -86,26 +82,13 @@ export const APP_CONFIG = parseConfig();
  */
 export async function apiFetch(
   path: string,
-  options?: Omit<ReactNativeSSLPinning.Options, "sslPinning">,
-): Promise<ReactNativeSSLPinning.Response> {
-  const certOptions = {
-    sslPinning: {
-      certs: [APP_CONFIG.certificateName],
-    },
-  };
-  const fetchOptions: ReactNativeSSLPinning.Options = {
-    ...options,
-    ...certOptions,
-  };
+  options: RequestInit = {},
+): Promise<Response> {
   if (globalThis.credentials) {
-    const headers = fetchOptions.headers ?? {};
-    headers.Authorization = `Basic ${globalThis.credentials}`;
-    fetchOptions.headers = headers;
+    const headers = options.headers ?? {};
+    (headers as Record<string, string>).Authorization = `Basic ${globalThis.credentials}`;
+    options.headers = headers;
   }
   const url = `${APP_CONFIG.address}/${path.replace(/^\//, "")}`;
-  try {
-    return await sslFetch(url, fetchOptions);
-  } catch (e) {
-    return e as ReactNativeSSLPinning.Response;
-  }
+  return fetch(url, options)
 }

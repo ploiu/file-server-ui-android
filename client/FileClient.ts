@@ -1,13 +1,19 @@
 import { BasicMessage, CreateFileRequest, FileApi } from '@/models';
-import { apiFetch } from '@/Config';
+import { apiFetch, APP_CONFIG } from '@/Config';
 import { Dirs, FileSystem } from 'react-native-file-access';
 import { PreviewCache } from '@/util/cacheUtil';
+import { documentDirectory, downloadAsync } from 'expo-file-system';
 
 export enum DownloadFileResult {
   SUCCESS,
   API_FAILURE,
   DISK_FAILURE,
 }
+
+export type DownloadFileOptions = {
+  /** whether to move the file to the downloads folder of the phone */
+  moveToExternalStorage: boolean;
+};
 
 /**
  * Upload a file to the server
@@ -100,7 +106,7 @@ async function moveToExternalStorage(
   file: FileApi,
 ): Promise<boolean> {
   try {
-    await FileSystem.cpExternal('file:///' + fileUri, file.name, 'downloads');
+    await FileSystem.cpExternal(fileUri, file.name, 'downloads');
   } catch (e) {
     console.trace('failed to move file to external storage', String(e));
     return false;
@@ -111,24 +117,32 @@ async function moveToExternalStorage(
 /**
  * Download a file and save it to the user's Downloads folder
  * @param file The file metadata object
+ * @param options
  * @returns Promise<void>
  */
-export async function downloadFile(file: FileApi): Promise<DownloadFileResult> {
+export async function downloadFile(
+  file: FileApi,
+  options: DownloadFileOptions,
+): Promise<DownloadFileResult> {
   // initially store the file in the cache directory
-  const cachedFileLocation = Dirs.DocumentDir + file.name;
-  const downloadResult = await apiFetch(`/files/${file.id}`, {
-    responseType: 'base64',
-  });
+  const cachedFileLocation = documentDirectory + file.name;
+  const downloadResult = await downloadAsync(
+    `${APP_CONFIG.address}/files/${file.id}`,
+    documentDirectory + file.name,
+    {
+      headers: {
+        Authorization: `Basic ${globalThis.credentials}`,
+      },
+    },
+  );
   if (downloadResult.status !== 200) {
-    const error = (await downloadResult.json()) as BasicMessage;
-    console.trace('Failed to download file ', error.message);
+    console.trace('Failed to download file. Check server logs for details');
     return DownloadFileResult.API_FAILURE;
   }
-  // downloadResult.data will never be undefined here because it's populated when we pass base64 for the response type
-  const base64Data = downloadResult.data!;
   try {
-    await FileSystem.writeFile(cachedFileLocation, base64Data, 'base64');
-    await moveToExternalStorage(cachedFileLocation, file);
+    if (options.moveToExternalStorage) {
+      await moveToExternalStorage(downloadResult.uri, file);
+    }
   } catch (e) {
     console.trace(
       'Failed to write file to disk or move file to external downloads folder: ',
@@ -171,15 +185,13 @@ export async function getPreviewCacheDirectory(): Promise<string> {
 
 /**
  * Get a file preview by ID
- * @returns The contents of the preview as base64 TODO change this to the actual image preview as base64
+ * @returns The contents of the preview as base64
  * @param id
  */
 export async function getFilePreview(id: number): Promise<string | null> {
   const cached = await PreviewCache.get(id);
   if (!cached) {
-    const fetchedCache = await apiFetch(`/files/preview/${id}`, {
-      responseType: 'base64',
-    });
+    const fetchedCache = await apiFetch(`/files/preview/${id}`);
     // we don't want to throw an error if 404, just return null
     if (fetchedCache.status === 404) {
       return null;
@@ -187,11 +199,12 @@ export async function getFilePreview(id: number): Promise<string | null> {
       const { message } = (await fetchedCache.json()) as BasicMessage;
       throw new Error('Failed to download preview cache for file: ' + message);
     }
-    // since we requested base64 for the response type, we know data won't be null
-    const data = fetchedCache.data!;
+    const data = await fetchedCache.bytes();
+    // memory constraints shouldn't be an issue here since the previews are all about 32kb in size
+    let base64 = btoa(String.fromCharCode.apply(null, [...data]))
+    PreviewCache.store(id, base64);
     // we don't care about waiting on writing to the cache, so no await here
-    PreviewCache.store(id, data);
-    return data;
+    return base64;
   } else {
     return PreviewCache.get(id);
   }
