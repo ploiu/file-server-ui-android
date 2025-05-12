@@ -1,25 +1,10 @@
-# Welcome to your Expo app 👋
+# File-Server-UI-Android
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+this is the android version of the [desktop file_server client](https://github.com/ploiu/file-server-ui) for my [file server](https://github.com/ploiu/file_server). It's still under development but I aim to bring all functionality to this app.
 
-## Get started
+## Getting Started
+The first thing you'll need is to make sure you have an instance of [file_server](https://github.com/ploiu/file_server) running...somewhere, preferably on your local machine. Import your ca.crt generated from the `gen_certs.sh` script in that project to the phone you're testing on.
+The next thing you'll need is to follow the instructions located in `./assets/config.example.jsonc`. This is to set up app config
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-3. follow the instructions in ./config.jsonc to create your own config file
-4. import your server certs for both local and production into ./android/src/main/assets
-
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Architecture
+This is a react native application using expo. The style framework is react-native-paper, and it uses Jest for tests. 

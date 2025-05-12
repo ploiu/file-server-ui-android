@@ -1,18 +1,15 @@
 // copy this file to ./config.json, remove the comments, and replace the default values
 {
-  // used to select either production or local profiles for running vs building
+  // used to select either production or local profiles for running vs building. Allowed values are "local" or "production"
   "env": "local",
+  // make sure this follows the Major.Minor.Patch version format. any spot with an x instead of a number is treated as a wildcard. You can find this value at <file server url>/api/version
   "compatibleVersion": "3.x.x",
   // used for debugging the server from this app locally, rather than on your deployed server with your precious data
   "local": {
-    "address": "https://192.168.1.1:8000",
-    // stored in android/src/main/assets/certName_local.cer. Exclude the extension and the path
-    "certificateName": "certName_local"
+    "address": "https://192.168.1.1:8000"
   },
   // used for when building your app to be actually used with your real server
   "production": {
-    "address": "https://1.1.1.1:8000",
-    // stored in android/src/main/assets/certName_production.cer. Exclude the extension and the path
-    "certificateName": "certName_production"
+    "address": "https://1.1.1.1:8000"
   }
 }

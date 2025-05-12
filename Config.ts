@@ -3,13 +3,10 @@ import rawConfigFile from "@/assets/config.json";
 export type ServerConfig = {
   /** ip address and port */
   address: string;
-  /** name of your certificate (without extension), should be placed in android/app/src/main/assets. Should be in der format */
-  certificateName: string;
 };
 
 interface Config {
   address: string;
-  certificateName: string;
   /** compares the server's version against the compatibleVersion string listed above */
   isCompatible: (serverVersion: string) => boolean;
 }
@@ -35,18 +32,8 @@ function parseServerConfig(input: Record<string, any>): ServerConfig {
       }, or \`address\` is not a string`,
     );
   }
-  if (
-    !("certificateName" in input) || typeof input.certificateName !== "string"
-  ) {
-    throw new Error(
-      `Missing \`certificateName\` field in ${
-        JSON.stringify(input)
-      }, or \`certificateName\` is not a string`,
-    );
-  }
   return {
-    address: input.address,
-    certificateName: input.certificateName,
+    address: input.address
   };
 }
 
@@ -64,7 +51,6 @@ function parseConfig(): Config {
   const serverConfig = parseServerConfig(rawConfigFile[env]);
   return {
     address: serverConfig.address,
-    certificateName: serverConfig.certificateName,
     isCompatible: (version) => versionCheckGex.test(version),
   };
 }

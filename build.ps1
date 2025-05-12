@@ -4,5 +4,6 @@ Write-Host -Foreground Green 'Success!'
 Write-Host -Foreground DarkGray 'Running Android build...'
 cd android
 ./gradlew app:assembleRelease
+# TODO check for build result
 cd app/build/outputs/apk/release
 Write-Host -Foreground Green 'Success! Moving to output directory. Run `adb install ./app-release.apk` to continue'
