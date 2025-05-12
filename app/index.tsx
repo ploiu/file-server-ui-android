@@ -19,6 +19,7 @@ export default function Index() {
   // hide the password input field contents
   const [hidePassword, setHidePassword] = useState(true);
   const [currentState, setCurrentState] = useState<states>(states.INITIAL);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorMessage, setErrorMessage] = useState('');
 
   // @ts-ignore

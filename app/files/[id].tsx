@@ -38,6 +38,7 @@ export default function FileView() {
   const { id } = useLocalSearchParams() as { id: string };
 
   const [file, setFile] = useState<FileApi>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorMessage, setErrorMessage] = useState<string>();
   const [currentState, setCurrentState] = useState(states.LOADING);
   const [preview, setPreview] = useState<string>();

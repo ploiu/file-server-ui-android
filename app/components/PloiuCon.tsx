@@ -5,6 +5,7 @@ import { Image, ImageRequireSource } from 'react-native';
 import * as React from 'react';
 import { ImageProps } from 'react-native/Libraries/Image/Image';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const AVAILABLE_ICONS = [
   'file-application',
   'file-archive',

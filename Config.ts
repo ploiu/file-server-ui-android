@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import rawConfigFile from "@/assets/config.json";
 
 export type ServerConfig = {

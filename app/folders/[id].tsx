@@ -81,6 +81,7 @@ export default function FolderView() {
         setPreviews(previews);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   /** TODO need to think more on how I want to handle this

@@ -1,6 +1,6 @@
 import { BasicMessage, CreateFileRequest, FileApi } from '@/models';
 import { apiFetch, APP_CONFIG } from '@/Config';
-import { Dirs, FileSystem } from 'react-native-file-access';
+import { FileSystem } from 'react-native-file-access';
 import { PreviewCache } from '@/util/cacheUtil';
 import { documentDirectory, downloadAsync } from 'expo-file-system';
 
@@ -125,7 +125,6 @@ export async function downloadFile(
   options: DownloadFileOptions,
 ): Promise<DownloadFileResult> {
   // initially store the file in the cache directory
-  const cachedFileLocation = documentDirectory + file.name;
   const downloadResult = await downloadAsync(
     `${APP_CONFIG.address}/files/${file.id}`,
     documentDirectory + file.name.toLowerCase(),
@@ -168,22 +167,6 @@ export async function deleteFile(id: number): Promise<void> {
 }
 
 /**
- * Get the path to the app's cache directory for file previews
- * This directory will be cleared when the user clears app storage
- */
-export async function getPreviewCacheDirectory(): Promise<string> {
-  const cacheDir = `${Dirs.CacheDir}previews`;
-
-  // make sure the directory exists before doing anything with it
-  const dirExists = await FileSystem.isDir(cacheDir);
-  if (!dirExists) {
-    await FileSystem.mkdir(cacheDir);
-  }
-
-  return cacheDir;
-}
-
-/**
  * Get a file preview by ID
  * @returns The contents of the preview as base64
  * @param id
@@ -201,7 +184,7 @@ export async function getFilePreview(id: number): Promise<string | null> {
     }
     const data = await fetchedCache.bytes();
     // memory constraints shouldn't be an issue here since the previews are all about 32kb in size
-    let base64 = btoa(String.fromCharCode.apply(null, [...data]))
+    let base64 = btoa(String.fromCharCode.apply(null, [...data]));
     PreviewCache.store(id, base64);
     // we don't care about waiting on writing to the cache, so no await here
     return base64;

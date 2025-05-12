@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyValuePair } from '@react-native-async-storage/async-storage/lib/typescript/types';
-import { FileApi, FolderApi, FolderPreviews } from '@/models';
+import { FolderApi, FolderPreviews } from '@/models';
 
 /** list of prefixes used as part of cache keys, to be used by the methods in here to prevent cache collisions */
 enum prefixes {
@@ -16,7 +16,7 @@ enum prefixes {
  * @param key
  * @param value
  */
-async function cacheItem(key: string, value: Object | string) {
+async function cacheItem(key: string, value: object | string) {
   const actualValue = typeof value === 'string' ? value : JSON.stringify(value);
   try {
     await AsyncStorage.setItem(key.toLowerCase(), actualValue);
