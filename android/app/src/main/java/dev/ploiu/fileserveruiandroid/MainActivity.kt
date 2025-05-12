@@ -1,4 +1,4 @@
-package com.anonymous.fileserveruiandroid
+package dev.ploiu.fileserveruiandroid
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

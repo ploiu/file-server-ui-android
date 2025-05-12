@@ -1,4 +1,4 @@
-package com.anonymous.fileserveruiandroid
+package dev.ploiu.fileserveruiandroid
 
 import android.app.Application
 import android.content.res.Configuration

@@ -1,9 +1,9 @@
-import { FileApi } from '@/models';
+import { FileApi } from '../../models';
 import { Surface, Text, useTheme } from 'react-native-paper';
 import { Image, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import PloiuCon from '@/app/components/PloiuCon';
+import PloiuCon from '../../app/components/PloiuCon';
 import { memo, useEffect, useState } from 'react';
-import { determineIcon } from '@/util/iconUtil';
+import { determineIcon } from '../../util/iconUtil';
 
 type FileEntryProps = {
   file: FileApi;

@@ -1,5 +1,5 @@
-import { Version } from '@/models';
-import { apiFetch, APP_CONFIG } from '@/Config';
+import { Version } from '../models';
+import { apiFetch, APP_CONFIG } from '../Config';
 
 async function getVersion(): Promise<Version> {
   const res = await apiFetch('/api/version');

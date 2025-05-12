@@ -1,6 +1,6 @@
-import { apiFetch } from '@/Config';
-import { FolderApi, FolderPreviews } from '@/models';
-import { FolderCache, PreviewCache } from '@/util/cacheUtil';
+import { apiFetch } from '../Config';
+import { FolderApi, FolderPreviews } from '../models';
+import { FolderCache, PreviewCache } from '../util/cacheUtil';
 
 export async function getFolderMetadata(id: number): Promise<FolderApi> {
   const response = await apiFetch(`/folders/metadata/${id}`);

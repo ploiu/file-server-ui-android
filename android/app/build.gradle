@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.anonymous.fileserveruiandroid'
+    namespace 'dev.ploiu.fileserveruiandroid'
     defaultConfig {
-        applicationId 'com.anonymous.fileserveruiandroid'
+        applicationId 'dev.ploiu.fileserveruiandroid'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

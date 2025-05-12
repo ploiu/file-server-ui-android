@@ -1,8 +1,3 @@
-const KIB = 1024;
-const MIB = KIB * 1024;
-const GIB = MIB * 1024;
-const TIB = GIB * 1024;
-
 /**
  * Converts a raw byte value to a human-readable format.
  * @param bytes - The byte value to format
