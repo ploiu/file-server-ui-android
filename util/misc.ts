@@ -1,3 +1,7 @@
+const KIB = 1024
+const MIB = KIB * 1024
+const GIB = MIB * 1024
+
 /**
  * Converts a raw byte value to a human-readable format.
  * @param bytes - The byte value to format
@@ -46,3 +50,28 @@ export function stripTimeFromDate(date: string) {
   return date.split('T')[0]
 }
 
+/**
+ * the backend server changes the file names a bit on the disk, this reverts that formatting for display purposes
+ * @param name
+ */
+export function formatFileName(name: string) {
+  return name.replace('leftParenthese', '(').replace('rightParenthese', ')')
+}
+
+/**
+ * returns the file size alias based on how the server interprets aliases on search
+ * @param bytes
+ */
+export function getFileSizeAlias(bytes: number): 'Tiny' | 'Small' | 'Medium' | 'Large' | 'ExtraLarge' {
+  if(bytes < 500 * KIB) {
+    return 'Tiny'
+  } else if (bytes < 10 * MIB) {
+    return 'Small'
+  } else if (bytes < 100 * MIB) {
+    return 'Medium'
+  } else if (bytes < GIB) {
+    return 'Large'
+  } else {
+    return 'ExtraLarge'
+  }
+}

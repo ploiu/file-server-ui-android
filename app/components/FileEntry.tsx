@@ -4,6 +4,7 @@ import { Image, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import PloiuCon from '../../app/components/PloiuCon';
 import { memo, useEffect, useState } from 'react';
 import { determineIcon } from '@/util/iconUtil';
+import { formatFileName } from '@/util/misc';
 
 type FileEntryProps = {
   file: FileApi;
@@ -52,7 +53,7 @@ const FileEntry = memo(
               style={{ ...styles.image }}
             />
           )}
-          <Text>{props.file.name}</Text>
+          <Text>{formatFileName(props.file.name)}</Text>
         </Surface>
       </TouchableWithoutFeedback>
     );

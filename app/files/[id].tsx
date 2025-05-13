@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { FileApi } from '@/models';
 import {
@@ -7,9 +7,20 @@ import {
   getFileMetadata,
   getFilePreview,
 } from '@/client/FileClient';
-import { ActivityIndicator, Surface, Text, useTheme } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Chip, FAB,
+  Surface,
+  Text,
+  useTheme
+} from 'react-native-paper';
 import FileEntry from '@/app/components/FileEntry';
-import { bytesToShorthand, stripTimeFromDate } from '@/util/misc';
+import {
+  bytesToShorthand,
+  formatFileName,
+  getFileSizeAlias,
+  stripTimeFromDate,
+} from '@/util/misc';
 import { documentDirectory, getContentUriAsync } from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
 
@@ -22,7 +33,8 @@ enum states {
 async function downloadAndOpenFile(file: FileApi) {
   await downloadFile(file, { moveToExternalStorage: false });
   // we downloaded it to the downloads directory, but we don't actually know where that path is. We initially download to the document directory and copy it out though
-  const url = (`${documentDirectory}${file.id}_${file.name}`).toLowerCase();
+  const url =
+    `${documentDirectory}${file.id}_${formatFileName(file.name)}`.toLowerCase();
   const contentUri = await getContentUriAsync(url);
   IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
     data: contentUri,
@@ -79,15 +91,47 @@ export default function FileView() {
           onTap={() => downloadAndOpenFile(file!)}
         />
       </View>
+      {/*file info*/}
       <Surface
         elevation={2}
         style={{ ...styles.container, borderRadius: theme.roundness }}>
         <Text variant={'headlineSmall'}>Type: {file?.fileType}</Text>
+        {/*file size and chip*/}
+        <View style={styles.sizeLine}>
+          <Text variant={'headlineSmall'}>
+            Size: {bytesToShorthand(file?.size ?? 0)}
+          </Text>
+          <Chip compact={true} icon={'ruler'} style={styles.sizeChip}>
+            {getFileSizeAlias(file?.size ?? 0)}
+          </Chip>
+        </View>
         <Text variant={'headlineSmall'}>
-          Size: {bytesToShorthand(file?.size ?? 0)}
+          Date Created: {stripTimeFromDate(file?.dateCreated ?? '')}
         </Text>
-        <Text variant={'headlineSmall'}>Date Created: {stripTimeFromDate(file?.dateCreated ?? '')}</Text>
       </Surface>
+      {/*tags*/}
+
+      {(file?.tags?.length ?? 0 > 0) ? (
+        <Surface
+          elevation={2}
+          style={{
+            ...styles.container,
+            borderRadius: theme.roundness,
+            ...styles.tagContainer,
+          }}>
+          <FlatList
+            numColumns={3}
+            columnWrapperStyle={{marginBottom: 6}}
+            data={file?.tags}
+            renderItem={({ item }) => (
+              <Chip style={styles.tag} icon={'tag'} testID={item.title}>
+                {item.title}
+              </Chip>
+            )}
+          />
+        </Surface>
+      ) : null}
+      <FAB icon={'menu'} style={{ ...styles.menuButton, borderRadius: theme.roundness }} variant={'primary'} mode={'flat'} />
     </View>
   );
 
@@ -125,4 +169,19 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingLeft: 10,
   },
+  tagContainer: {},
+  tag: {
+    marginLeft: 10,
+  },
+  sizeLine: {
+   flexDirection: 'row'
+  },
+  sizeChip: {
+    marginLeft: 10,
+  },
+  menuButton: {
+    position: 'absolute',
+    right: 30,
+    bottom: 50
+  }
 });

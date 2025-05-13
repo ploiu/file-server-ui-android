@@ -7,6 +7,7 @@ import {
   downloadAsync,
   getInfoAsync,
 } from 'expo-file-system';
+import { formatFileName } from '@/util/misc';
 
 export enum DownloadFileResult {
   SUCCESS,
@@ -112,7 +113,7 @@ async function moveToExternalStorage(
   try {
     await FileSystem.cpExternal(
       fileUri,
-      `${file.id}_${file.name}`,
+      `${file.id}_${formatFileName(file.name)}`,
       'downloads',
     );
   } catch (e) {
@@ -154,7 +155,7 @@ export async function downloadFile(
   options: DownloadFileOptions,
 ): Promise<DownloadFileResult> {
   // if the file already exists, then don't make the call to download
-  const downloadLocation = `${documentDirectory}${file.id}_${file.name.toLowerCase()}`;
+  const downloadLocation = `${documentDirectory}${file.id}_${formatFileName(file.name).toLowerCase()}`;
   const fileInfo = await getInfoAsync(downloadLocation);
   const uri = fileInfo.exists
     ? downloadLocation
