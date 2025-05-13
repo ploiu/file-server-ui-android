@@ -24,3 +24,6 @@ jobs:
       
     - name: Run ESLint
       run: npx eslint . --max-warnings 0
+
+    - name: Run tests
+      run: npm run test

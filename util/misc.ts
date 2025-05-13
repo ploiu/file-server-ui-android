@@ -37,3 +37,12 @@ export function bytesToShorthand(bytes: number): string {
 
   return `${cleanedValue}${units[unitIndex - 1]}`;
 }
+
+/**
+ * given an ISO date, returns the part before the `T`
+ * @param date
+ */
+export function stripTimeFromDate(date: string) {
+  return date.split('T')[0]
+}
+

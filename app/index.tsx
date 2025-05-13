@@ -4,6 +4,7 @@ import { isCompatible, passwordCheck } from '@/client/ApiClient';
 import { Button, Modal, Portal, TextInput } from 'react-native-paper';
 import { router } from 'expo-router';
 import { handleCredentials, saveCredentials } from '@/util/securityHelper';
+import { parseConfig } from '@/Config';
 
 enum states {
   INITIAL,
@@ -12,6 +13,8 @@ enum states {
   // catch-all error
   ERROR,
 }
+
+globalThis.APP_CONFIG = parseConfig();
 
 export default function Index() {
   const [username, setUsername] = useState('');

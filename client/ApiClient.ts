@@ -1,5 +1,5 @@
 import { Version } from '../models';
-import { apiFetch, APP_CONFIG } from '../Config';
+import { apiFetch } from '../Config';
 
 async function getVersion(): Promise<Version> {
   const res = await apiFetch('/api/version');
@@ -8,7 +8,7 @@ async function getVersion(): Promise<Version> {
 
 export async function isCompatible(): Promise<boolean> {
   const version = await getVersion();
-  return APP_CONFIG.isCompatible(version.version);
+  return globalThis.APP_CONFIG.isCompatible(version.version);
 }
 
 /**

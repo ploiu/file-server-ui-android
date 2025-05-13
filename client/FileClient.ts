@@ -1,8 +1,12 @@
 import { BasicMessage, CreateFileRequest, FileApi } from '@/models';
-import { apiFetch, APP_CONFIG } from '@/Config';
+import { apiFetch } from '@/Config';
 import { FileSystem } from 'react-native-file-access';
 import { PreviewCache } from '@/util/cacheUtil';
-import { documentDirectory, downloadAsync } from 'expo-file-system';
+import {
+  documentDirectory,
+  downloadAsync,
+  getInfoAsync,
+} from 'expo-file-system';
 
 export enum DownloadFileResult {
   SUCCESS,
@@ -106,12 +110,37 @@ async function moveToExternalStorage(
   file: FileApi,
 ): Promise<boolean> {
   try {
-    await FileSystem.cpExternal(fileUri, file.name, 'downloads');
+    await FileSystem.cpExternal(
+      fileUri,
+      `${file.id}_${file.name}`,
+      'downloads',
+    );
   } catch (e) {
     console.trace('failed to move file to external storage', String(e));
     return false;
   }
   return true;
+}
+
+async function downloadFile_internal(
+  file: FileApi,
+  downloadLocation: string,
+): Promise<DownloadFileResult | string> {
+  // initially store the file in the cache directory
+  const downloadResult = await downloadAsync(
+    `${globalThis.APP_CONFIG.address}/files/${file.id}`,
+    downloadLocation,
+    {
+      headers: {
+        Authorization: `Basic ${globalThis.credentials}`,
+      },
+    },
+  );
+  if (downloadResult.status !== 200) {
+    console.trace('Failed to download file. Check server logs for details');
+    return DownloadFileResult.API_FAILURE;
+  }
+  return downloadResult.uri;
 }
 
 /**
@@ -124,29 +153,25 @@ export async function downloadFile(
   file: FileApi,
   options: DownloadFileOptions,
 ): Promise<DownloadFileResult> {
-  // initially store the file in the cache directory
-  const downloadResult = await downloadAsync(
-    `${APP_CONFIG.address}/files/${file.id}`,
-    documentDirectory + file.name.toLowerCase(),
-    {
-      headers: {
-        Authorization: `Basic ${globalThis.credentials}`,
-      },
-    },
-  );
-  if (downloadResult.status !== 200) {
-    console.trace('Failed to download file. Check server logs for details');
-    return DownloadFileResult.API_FAILURE;
-  }
-  try {
-    if (options.moveToExternalStorage) {
-      await moveToExternalStorage(downloadResult.uri, file);
+  // if the file already exists, then don't make the call to download
+  const downloadLocation = `${documentDirectory}${file.id}_${file.name.toLowerCase()}`;
+  const fileInfo = await getInfoAsync(downloadLocation);
+  const uri = fileInfo.exists
+    ? downloadLocation
+    : await downloadFile_internal(file, downloadLocation);
+  if (typeof uri === 'string') {
+    try {
+      if (options.moveToExternalStorage) {
+        await moveToExternalStorage(uri, file);
+      }
+    } catch (e) {
+      console.trace(
+        'Failed to write file to disk or move file to external downloads folder: ',
+        String(e),
+      );
     }
-  } catch (e) {
-    console.trace(
-      'Failed to write file to disk or move file to external downloads folder: ',
-      String(e),
-    );
+  } else {
+    return uri;
   }
   return DownloadFileResult.SUCCESS;
 }

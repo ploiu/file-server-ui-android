@@ -1,20 +1,24 @@
-import { FileApi } from '../../models';
+import { FileApi } from '@/models';
 import { Surface, Text, useTheme } from 'react-native-paper';
 import { Image, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import PloiuCon from '../../app/components/PloiuCon';
 import { memo, useEffect, useState } from 'react';
-import { determineIcon } from '../../util/iconUtil';
+import { determineIcon } from '@/util/iconUtil';
 
 type FileEntryProps = {
   file: FileApi;
   // base64 string
   preview?: string;
+  imageWidth?: number;
+  imageHeight?: number;
   onLongPress?: () => void;
   onTap?: () => void;
 };
 
 const FileEntry = memo(
   function FileEntry(props: FileEntryProps) {
+    const imageWidth = props.imageWidth ?? 112;
+    const imageHeight = props.imageHeight ?? 112;
     const theme = useTheme();
     const [preview, setPreview] = useState<string>();
 
@@ -36,12 +40,16 @@ const FileEntry = memo(
           {preview ? (
             <Image
               source={{ uri: `data:image/png;base64,${preview}` }}
-              style={styles.image}
+              style={{
+                ...styles.image,
+                width: imageWidth,
+                height: imageHeight,
+              }}
             />
           ) : (
             <PloiuCon
               icon={determineIcon(props.file.fileType)}
-              style={styles.image}
+              style={{ ...styles.image }}
             />
           )}
           <Text>{props.file.name}</Text>
@@ -49,7 +57,10 @@ const FileEntry = memo(
       </TouchableWithoutFeedback>
     );
   },
-  (previous, next) => previous.preview?.length === next.preview?.length,
+  (previous, next) =>
+    previous.preview?.length === next.preview?.length &&
+    previous.imageWidth === next.imageWidth &&
+    previous.imageHeight === next.imageHeight,
 );
 
 const styles = StyleSheet.create({

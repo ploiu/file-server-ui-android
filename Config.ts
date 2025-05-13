@@ -6,7 +6,7 @@ export type ServerConfig = {
   address: string;
 };
 
-interface Config {
+export type Config = {
   address: string;
   /** compares the server's version against the compatibleVersion string listed above */
   isCompatible: (serverVersion: string) => boolean;
@@ -38,7 +38,7 @@ function parseServerConfig(input: Record<string, any>): ServerConfig {
   };
 }
 
-function parseConfig(): Config {
+export function parseConfig(): Config {
   const { env, compatibleVersion } = rawConfigFile;
   if (env !== "local" && env !== "production") {
     throw new Error(`${env} is not a valid config file environment`);
@@ -56,9 +56,7 @@ function parseConfig(): Config {
   };
 }
 
-export const APP_CONFIG = parseConfig();
-
-/** wrapper for ssl pinned fetch that always presents the configured certificate and uses the base url provided in configuration.
+/** wrapper for fetch that always passes our credentials to the server
  *
  * example usage:
  * ```js
@@ -76,6 +74,6 @@ export async function apiFetch(
     (headers as Record<string, string>).Authorization = `Basic ${globalThis.credentials}`;
     options.headers = headers;
   }
-  const url = `${APP_CONFIG.address}/${path.replace(/^\//, "")}`;
+  const url = `${globalThis.APP_CONFIG.address}/${path.replace(/^\//, "")}`;
   return fetch(url, options)
 }
