@@ -28,4 +28,8 @@ This is a react native application using expo. The style framework is react-nati
 </network-security-config>
 ```
 `cleartextTrafficPermitted="true"` is required for expo dev server to function
+On top of that, you need to add this line to `./android/gradle.properties`
+```properties
+AsyncStorage_useNextStorage=true
+```
 
