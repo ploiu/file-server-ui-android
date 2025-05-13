@@ -9,10 +9,11 @@ import {
 } from '@/client/FileClient';
 import {
   ActivityIndicator,
-  Chip, FAB,
+  Chip,
+  FAB,
   Surface,
   Text,
-  useTheme
+  useTheme,
 } from 'react-native-paper';
 import FileEntry from '@/app/components/FileEntry';
 import {
@@ -121,7 +122,7 @@ export default function FileView() {
           }}>
           <FlatList
             numColumns={3}
-            columnWrapperStyle={{marginBottom: 6}}
+            columnWrapperStyle={{ marginBottom: 6 }}
             data={file?.tags}
             renderItem={({ item }) => (
               <Chip style={styles.tag} icon={'tag'} testID={item.title}>
@@ -131,7 +132,12 @@ export default function FileView() {
           />
         </Surface>
       ) : null}
-      <FAB icon={'menu'} style={{ ...styles.menuButton, borderRadius: theme.roundness }} variant={'primary'} mode={'flat'} />
+      <FAB
+        icon={'menu'}
+        style={{ ...styles.menuButton, borderRadius: theme.roundness }}
+        variant={'primary'}
+        mode={'flat'}
+      />
     </View>
   );
 
@@ -174,7 +180,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   sizeLine: {
-   flexDirection: 'row'
+    flexDirection: 'row',
   },
   sizeChip: {
     marginLeft: 10,
@@ -182,6 +188,6 @@ const styles = StyleSheet.create({
   menuButton: {
     position: 'absolute',
     right: 30,
-    bottom: 50
-  }
+    bottom: 50,
+  },
 });

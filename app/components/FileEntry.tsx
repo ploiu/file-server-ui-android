@@ -40,6 +40,7 @@ const FileEntry = memo(
           style={{ ...styles.surface, borderRadius: theme.roundness }}>
           {preview ? (
             <Image
+              testID={'filePreview'}
               source={{ uri: `data:image/png;base64,${preview}` }}
               style={{
                 ...styles.image,
@@ -50,10 +51,15 @@ const FileEntry = memo(
           ) : (
             <PloiuCon
               icon={determineIcon(props.file.fileType)}
-              style={{ ...styles.image }}
+              testID={'fileIcon'}
+              style={{
+                ...styles.image,
+                width: imageWidth,
+                height: imageHeight,
+              }}
             />
           )}
-          <Text>{formatFileName(props.file.name)}</Text>
+          <Text testID={'fileName'}>{formatFileName(props.file.name)}</Text>
         </Surface>
       </TouchableWithoutFeedback>
     );
@@ -74,8 +80,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   image: {
-    width: 112,
-    height: 112,
     resizeMode: 'contain',
   },
 });
