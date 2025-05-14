@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react-native';
+import { render, userEvent } from '@testing-library/react-native';
 import FileEntry from '@/app/components/FileEntry';
 import { FileApi } from '@/models';
 
@@ -176,5 +176,45 @@ describe('name', () => {
     const rendered = render(<FileEntry file={file} />);
     const name = rendered.getByTestId('fileName');
     expect(name).toHaveTextContent('test.txt', { exact: true });
+  });
+});
+
+describe('events', () => {
+  test('should activate onTap when pressed', async () => {
+    const file: FileApi = {
+      dateCreated: '',
+      fileType: 'Document',
+      folderId: 0,
+      id: 0,
+      name: 'test.txt',
+      size: 0,
+      tags: [],
+    };
+    const onTap = jest.fn();
+    const rendered = render(
+      <FileEntry file={file} onTap={onTap} />,
+    ).getByTestId('root');
+    const user = userEvent.setup();
+    await user.press(rendered);
+    expect(onTap).toHaveBeenCalledTimes(1);
+  });
+
+  test('should activate onLongPress when long pressed', async () => {
+    const file: FileApi = {
+      dateCreated: '',
+      fileType: 'Document',
+      folderId: 0,
+      id: 0,
+      name: 'test.txt',
+      size: 0,
+      tags: [],
+    };
+    const longPress = jest.fn();
+    const rendered = render(
+      <FileEntry file={file} onLongPress={longPress} />,
+    ).getByTestId('root');
+    const user = userEvent.setup();
+    await user.longPress(rendered);
+    expect(longPress).toHaveBeenCalledTimes(1);
   });
 });

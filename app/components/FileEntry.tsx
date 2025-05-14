@@ -33,6 +33,7 @@ const FileEntry = memo(
 
     return (
       <TouchableWithoutFeedback
+        testID={'root'}
         onPress={props.onTap}
         onLongPress={props.onLongPress}>
         <Surface
