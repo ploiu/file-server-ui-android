@@ -115,8 +115,11 @@ export default function FileView() {
   );
 
   const submitFile = async (changes: Partial<FileApi>) => {
+    if (!file) {
+      return;
+    }
     try {
-      const newFile = await updateFile({ ...file!, ...changes });
+      const newFile = await updateFile({ ...file, ...changes });
       setFile(newFile);
       // update the temp name to be the updated file name
       setTempName(newFile.name);
@@ -136,6 +139,9 @@ export default function FileView() {
   const hideModal = () => setModalState(ModalStates.CLOSED);
 
   const renderModalState = () => {
+    if (!file) {
+      return <></>;
+    }
     switch (modalState) {
       case ModalStates.ERROR:
         return <></>;
@@ -148,7 +154,7 @@ export default function FileView() {
             contentContainerStyle={styles.editModal}>
             {/*can't use value here because (even with no re-render), editing text makes the cursor jump all over the place and input characters in random order*/}
             <TextInput
-              placeholder={file?.name}
+              placeholder={file.name}
               label={'File Name'}
               testID={'renameFileName'}
               mode={'outlined'}
@@ -165,9 +171,7 @@ export default function FileView() {
               <Button
                 icon={'rename'}
                 mode={'contained'}
-                onPress={() => {
-                  submitFile({ name: tempName });
-                }}
+                onPress={() => submitFile({ name: tempName })}
                 style={styles.buttonRowButton}>
                 Rename
               </Button>
@@ -185,62 +189,64 @@ export default function FileView() {
     }
   };
 
-  const fabActions = [
-    {
-      icon: 'delete',
-      label: 'Delete',
-      onPress: () => {},
-    },
-    {
-      icon: 'tag-plus',
-      label: 'Add Tag',
-      onPress: () => {},
-    },
-    {
-      icon: 'rename',
-      label: 'Rename',
-      onPress: () => setModalState(ModalStates.RENAME),
-    },
-    {
-      icon: 'open-in-app',
-      label: 'Open',
-      onPress: () => downloadAndOpenFile(file!),
-    },
-    {
-      icon: 'floppy',
-      label: 'Save',
-      onPress: () => downloadFile(file!, { moveToExternalStorage: true }),
-    },
-  ];
+  const fabActions = file
+    ? [
+        {
+          icon: 'delete',
+          label: 'Delete',
+          onPress: () => {},
+        },
+        {
+          icon: 'tag-plus',
+          label: 'Add Tag',
+          onPress: () => {},
+        },
+        {
+          icon: 'rename',
+          label: 'Rename',
+          onPress: () => setModalState(ModalStates.RENAME),
+        },
+        {
+          icon: 'open-in-app',
+          label: 'Open',
+          onPress: () => downloadAndOpenFile(file),
+        },
+        {
+          icon: 'floppy',
+          label: 'Save',
+          onPress: () => downloadFile(file, { moveToExternalStorage: true }),
+        },
+      ]
+    : [];
 
   const showingDetails = file ? (
     <View style={styles.detailsRoot}>
       <View style={styles.fileEntryContainer}>
         <FileEntry
-          fileName={file!.name}
-          fileType={file!.fileType!}
+          fileName={file.name}
+          fileType={file.fileType}
           preview={preview}
-          onTap={() => downloadAndOpenFile(file!)}
+          onTap={() => downloadAndOpenFile(file)}
         />
       </View>
       {/*file info*/}
       <Container style={{ borderRadius: theme.roundness }}>
-        <Text variant={'headlineSmall'}>Type: {file?.fileType}</Text>
+        <Text variant={'headlineSmall'}>Type: {file.fileType}</Text>
         {/*file size and chip*/}
         <View style={styles.sizeLine}>
           <Text variant={'headlineSmall'}>
-            Size: {bytesToShorthand(file?.size ?? 0)}
+            Size: {bytesToShorthand(file.size)}
           </Text>
           <Chip compact={true} icon={'ruler'} style={styles.sizeChip}>
-            {getFileSizeAlias(file?.size ?? 0)}
+            {getFileSizeAlias(file.size)}
           </Chip>
         </View>
         <Text variant={'headlineSmall'}>
-          Date Created: {stripTimeFromDate(file?.dateCreated ?? '')}
+          Date Created: {stripTimeFromDate(file.dateCreated)}
         </Text>
       </Container>
       {/*tags*/}
-      {file?.tags && file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
+      {file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
       {/*floating menu / delete button*/}
       {fabState === FabStates.TRASH ? (
         <FAB
