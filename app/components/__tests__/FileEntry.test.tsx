@@ -13,7 +13,9 @@ describe('icon', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} />);
+    const rendered = render(
+      <FileEntry fileName={file.name} fileType={file.fileType!} />,
+    );
     const icon = rendered.getByTestId('fileIcon');
     expect(icon).toBeVisible();
   });
@@ -28,7 +30,9 @@ describe('icon', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} />);
+    const rendered = render(
+      <FileEntry fileName={file.name} fileType={file.fileType!} />,
+    );
     const icon = rendered.getByTestId('fileIcon');
     expect(icon.props.icon).toBe('file-document');
   });
@@ -44,7 +48,12 @@ describe('icon', () => {
       tags: [],
     };
     const rendered = render(
-      <FileEntry file={file} imageWidth={10} imageHeight={10} />,
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        imageWidth={10}
+        imageHeight={10}
+      />,
     );
     const icon = rendered.getByTestId('fileIcon');
     expect(icon).toHaveStyle({
@@ -63,7 +72,9 @@ describe('icon', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} />);
+    const rendered = render(
+      <FileEntry fileName={file.name} fileType={file.fileType!} />,
+    );
     const icon = rendered.getByTestId('fileIcon');
     expect(icon).toHaveStyle({
       width: 112,
@@ -81,7 +92,13 @@ describe('icon', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} preview={'aGk='} />);
+    const rendered = render(
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        preview={'aGk='}
+      />,
+    );
     const icon = rendered.queryAllByTestId('fileIcon');
     expect(icon).toHaveLength(0);
   });
@@ -98,7 +115,9 @@ describe('preview', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} />);
+    const rendered = render(
+      <FileEntry fileName={file.name} fileType={file.fileType!} />,
+    );
     const preview = rendered.queryAllByTestId('filePreview');
     expect(preview).toHaveLength(0);
   });
@@ -113,7 +132,13 @@ describe('preview', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} preview={'aGk='} />);
+    const rendered = render(
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        preview={'aGk='}
+      />,
+    );
     const preview = rendered.getByTestId('filePreview');
     expect(preview).toBeVisible();
   });
@@ -128,7 +153,13 @@ describe('preview', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} preview={'aGk='} />);
+    const rendered = render(
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        preview={'aGk='}
+      />,
+    );
     const preview = rendered.getByTestId('filePreview');
     expect(preview).toHaveStyle({
       width: 112,
@@ -148,7 +179,8 @@ describe('preview', () => {
     };
     const rendered = render(
       <FileEntry
-        file={file}
+        fileName={file.name}
+        fileType={file.fileType!}
         imageWidth={10}
         imageHeight={10}
         preview={'aGk='}
@@ -173,7 +205,9 @@ describe('name', () => {
       size: 0,
       tags: [],
     };
-    const rendered = render(<FileEntry file={file} />);
+    const rendered = render(
+      <FileEntry fileName={file.name} fileType={file.fileType!} />,
+    );
     const name = rendered.getByTestId('fileName');
     expect(name).toHaveTextContent('test.txt', { exact: true });
   });
@@ -192,7 +226,11 @@ describe('events', () => {
     };
     const onTap = jest.fn();
     const rendered = render(
-      <FileEntry file={file} onTap={onTap} />,
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        onTap={onTap}
+      />,
     ).getByTestId('root');
     const user = userEvent.setup();
     await user.press(rendered);
@@ -211,7 +249,11 @@ describe('events', () => {
     };
     const longPress = jest.fn();
     const rendered = render(
-      <FileEntry file={file} onLongPress={longPress} />,
+      <FileEntry
+        fileName={file.name}
+        fileType={file.fileType!}
+        onLongPress={longPress}
+      />,
     ).getByTestId('root');
     const user = userEvent.setup();
     await user.longPress(rendered);

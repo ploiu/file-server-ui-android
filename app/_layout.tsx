@@ -21,7 +21,7 @@ export default function RootLayout() {
 }
 
 // generated from https://callstack.github.io/react-native-paper/docs/guides/theming#creating-dynamic-theme-colors
-const theme = {
+export const theme = {
   ...MD3DarkTheme,
   roundness: 20,
   colors: {
@@ -33,10 +33,10 @@ const theme = {
     onSecondary: 'rgb(0, 54, 61)',
     secondaryContainer: 'rgb(0, 79, 88)',
     onSecondaryContainer: 'rgb(151, 240, 255)',
-    tertiary: 'rgb(228, 181, 255)',
-    onTertiary: 'rgb(72, 24, 103)',
-    tertiaryContainer: 'rgb(96, 49, 127)',
-    onTertiaryContainer: 'rgb(244, 218, 255)',
+    tertiary: '#BF3959',
+    onTertiary: '#EF476F',
+    tertiaryContainer: '#EF476F',
+    onTertiaryContainer: '#8F2B43',
     error: 'rgb(255, 180, 171)',
     onError: 'rgb(105, 0, 5)',
     errorContainer: 'rgb(147, 0, 10)',

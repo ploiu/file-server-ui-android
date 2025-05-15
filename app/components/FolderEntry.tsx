@@ -1,8 +1,9 @@
-import { FolderApi } from '../../models';
-import { Surface, Text, useTheme } from 'react-native-paper';
+import { FolderApi } from '@/models';
+import { Text, useTheme } from 'react-native-paper';
 import { StyleSheet, TouchableWithoutFeedback, Vibration } from 'react-native';
 import { router } from 'expo-router';
 import PloiuCon from '../../app/components/PloiuCon';
+import Container from '@/app/components/Container';
 
 type FolderEntryProps = {
   folder: FolderApi;
@@ -22,12 +23,10 @@ const FolderEntry = (props: FolderEntryProps) => {
 
   return (
     <TouchableWithoutFeedback onPress={tap} onLongPress={pressAndHold}>
-      <Surface
-        elevation={1}
-        style={{ ...styles.surface, borderRadius: theme.roundness }}>
+      <Container style={{ ...styles.surface, borderRadius: theme.roundness }}>
         <PloiuCon icon={'folder'} style={{ width: 75, height: 75 }} />
         <Text>{props.folder.name}</Text>
-      </Surface>
+      </Container>
     </TouchableWithoutFeedback>
   );
 };
@@ -36,7 +35,6 @@ const styles = StyleSheet.create({
   surface: {
     flex: 1,
     margin: 8,
-    paddingBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },

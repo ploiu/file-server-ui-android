@@ -97,7 +97,8 @@ export default function FolderView() {
     };
     return (
       <FileEntry
-        file={item}
+        fileName={item.name}
+        fileType={item.fileType!}
         onLongPress={onLongPress}
         preview={previews.get(item.id)}
         onTap={() => router.navigate(`/files/${item.id}`)}

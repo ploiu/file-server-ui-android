@@ -1,18 +1,22 @@
 import { useLocalSearchParams } from 'expo-router';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { FileApi } from '@/models';
 import {
   downloadFile,
   getFileMetadata,
   getFilePreview,
+  updateFile,
 } from '@/client/FileClient';
 import {
   ActivityIndicator,
+  Button,
   Chip,
   FAB,
-  Surface,
+  Modal,
+  Portal,
   Text,
+  TextInput,
   useTheme,
 } from 'react-native-paper';
 import FileEntry from '@/app/components/FileEntry';
@@ -24,10 +28,30 @@ import {
 } from '@/util/misc';
 import { documentDirectory, getContentUriAsync } from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
+import TagList from '@/app/components/TagList';
+import Container from '@/app/components/Container';
+import { theme } from '@/app/_layout';
 
-enum states {
+enum States {
   LOADING,
   SHOWING_DETAILS,
+}
+
+enum FabStates {
+  /** menu is closed but trash isn't showing */
+  CLOSED,
+  /** regular fab doesn't exist, instead trash fab shows */
+  TRASH,
+  /** fab is open */
+  OPEN,
+}
+
+enum ModalStates {
+  RENAME,
+  ADD_TAG,
+  EDIT_TAG,
+  DELETE_CONFIRM,
+  CLOSED,
   ERROR,
 }
 
@@ -50,21 +74,28 @@ export default function FileView() {
   const [file, setFile] = useState<FileApi>();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [currentState, setCurrentState] = useState(states.LOADING);
+  const [currentState, setCurrentState] = useState(States.LOADING);
+  const [fabState, setFabState] = useState(FabStates.CLOSED);
+  const [modalState, setModalState] = useState(ModalStates.CLOSED);
   const [preview, setPreview] = useState<string>();
+
+  // to prevent re-renders when updating fields
+  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
     (async () => {
       try {
         const parsedId = parseInt(id);
-        setFile(await getFileMetadata(parsedId));
+        const f = await getFileMetadata(parsedId);
+        setTempName(f.name);
+        setFile(f);
         // don't want to hold up the ui thread, so no await here
         getFilePreview(parsedId).then(prev => {
           if (prev) {
             setPreview(prev);
           }
         });
-        setCurrentState(states.SHOWING_DETAILS);
+        setCurrentState(States.SHOWING_DETAILS);
       } catch (e) {
         if (typeof e === 'string') {
           console.trace(`Failed to pull file with id ${id}: `, e);
@@ -83,19 +114,117 @@ export default function FileView() {
     </View>
   );
 
-  const showingDetails = (
+  const submitFile = async (changes: Partial<FileApi>) => {
+    try {
+      const newFile = await updateFile({ ...file!, ...changes });
+      setFile(newFile);
+      // update the temp name to be the updated file name
+      setTempName(newFile.name);
+      setModalState(ModalStates.CLOSED);
+    } catch (e) {
+      if (e instanceof Error) {
+        setErrorMessage(e.message);
+      } else if (typeof e === 'string') {
+        setErrorMessage(e);
+      } else {
+        setErrorMessage(String(e));
+      }
+      setModalState(ModalStates.ERROR);
+    }
+  };
+
+  const hideModal = () => setModalState(ModalStates.CLOSED);
+
+  const renderModalState = () => {
+    switch (modalState) {
+      case ModalStates.ERROR:
+        return <></>;
+      case ModalStates.RENAME:
+        return (
+          <Modal
+            visible
+            onDismiss={hideModal}
+            testID={'renameModal'}
+            contentContainerStyle={styles.editModal}>
+            {/*can't use value here because (even with no re-render), editing text makes the cursor jump all over the place and input characters in random order*/}
+            <TextInput
+              placeholder={file?.name}
+              label={'File Name'}
+              testID={'renameFileName'}
+              mode={'outlined'}
+              onChangeText={setTempName}
+            />
+            <View style={styles.buttonRow}>
+              <Button
+                icon={'cancel'}
+                mode={'elevated'}
+                onPress={hideModal}
+                style={styles.buttonRowButton}>
+                Cancel
+              </Button>
+              <Button
+                icon={'rename'}
+                mode={'contained'}
+                onPress={() => {
+                  submitFile({ name: tempName });
+                }}
+                style={styles.buttonRowButton}>
+                Rename
+              </Button>
+            </View>
+          </Modal>
+        );
+      case ModalStates.ADD_TAG:
+        break;
+      case ModalStates.EDIT_TAG:
+        break;
+      case ModalStates.DELETE_CONFIRM:
+        break;
+      case ModalStates.CLOSED:
+        return <></>;
+    }
+  };
+
+  const fabActions = [
+    {
+      icon: 'delete',
+      label: 'Delete',
+      onPress: () => {},
+    },
+    {
+      icon: 'tag-plus',
+      label: 'Add Tag',
+      onPress: () => {},
+    },
+    {
+      icon: 'rename',
+      label: 'Rename',
+      onPress: () => setModalState(ModalStates.RENAME),
+    },
+    {
+      icon: 'open-in-app',
+      label: 'Open',
+      onPress: () => downloadAndOpenFile(file!),
+    },
+    {
+      icon: 'floppy',
+      label: 'Save',
+      onPress: () => downloadFile(file!, { moveToExternalStorage: true }),
+    },
+  ];
+
+  const showingDetails = file ? (
     <View style={styles.detailsRoot}>
       <View style={styles.fileEntryContainer}>
         <FileEntry
-          file={file!}
+          fileName={file!.name}
+          fileType={file!.fileType!}
           preview={preview}
           onTap={() => downloadAndOpenFile(file!)}
         />
       </View>
       {/*file info*/}
-      <Surface
-        elevation={2}
-        style={{ ...styles.container, borderRadius: theme.roundness }}>
+      <Container style={{ borderRadius: theme.roundness }}>
         <Text variant={'headlineSmall'}>Type: {file?.fileType}</Text>
         {/*file size and chip*/}
         <View style={styles.sizeLine}>
@@ -109,46 +238,43 @@ export default function FileView() {
         <Text variant={'headlineSmall'}>
           Date Created: {stripTimeFromDate(file?.dateCreated ?? '')}
         </Text>
-      </Surface>
+      </Container>
       {/*tags*/}
-
-      {(file?.tags?.length ?? 0 > 0) ? (
-        <Surface
-          elevation={2}
-          style={{
-            ...styles.container,
-            borderRadius: theme.roundness,
-            ...styles.tagContainer,
-          }}>
-          <FlatList
-            numColumns={3}
-            columnWrapperStyle={{ marginBottom: 6 }}
-            data={file?.tags}
-            renderItem={({ item }) => (
-              <Chip style={styles.tag} icon={'tag'} testID={item.title}>
-                {item.title}
-              </Chip>
-            )}
+      {file?.tags && file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
+      {/*floating menu / delete button*/}
+      {fabState === FabStates.TRASH ? (
+        <FAB
+          testID={'deleteFab'}
+          style={{ borderRadius: theme.roundness }}
+          variant={'tertiary'}
+          icon={'delete'}
+        />
+      ) : (
+        <Portal>
+          <FAB.Group
+            icon={'menu'}
+            onStateChange={({ open }) =>
+              setFabState(open ? FabStates.OPEN : FabStates.CLOSED)
+            }
+            fabStyle={{ borderRadius: theme.roundness }}
+            variant={'primary'}
+            open={fabState === FabStates.OPEN}
+            visible
+            actions={fabActions}
           />
-        </Surface>
-      ) : null}
-      <FAB
-        icon={'menu'}
-        style={{ ...styles.menuButton, borderRadius: theme.roundness }}
-        variant={'primary'}
-        mode={'flat'}
-      />
+        </Portal>
+      )}
+      {/*different modals*/}
+      <Portal>{renderModalState()}</Portal>
     </View>
-  );
+  ) : null;
 
   const determineView = () => {
     switch (currentState) {
-      case states.LOADING:
+      case States.LOADING:
         return loading;
-      case states.SHOWING_DETAILS:
+      case States.SHOWING_DETAILS:
         return showingDetails;
-      case states.ERROR:
-        return <></>;
       default:
         return <></>;
     }
@@ -168,26 +294,24 @@ const styles = StyleSheet.create({
   fileEntryContainer: {
     flex: 0.3,
   },
-  container: {
-    // flex: 1,
-    margin: 8,
-    paddingBottom: 10,
-    paddingTop: 10,
-    paddingLeft: 10,
-  },
-  tagContainer: {},
-  tag: {
-    marginLeft: 10,
-  },
   sizeLine: {
     flexDirection: 'row',
   },
   sizeChip: {
     marginLeft: 10,
   },
-  menuButton: {
-    position: 'absolute',
-    right: 30,
-    bottom: 50,
+  editModal: {
+    padding: 10,
+    paddingTop: 30,
+    paddingBottom: 30,
+    backgroundColor: theme.colors.elevation.level4,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  buttonRowButton: {
+    margin: 10,
+    marginTop: 15,
   },
 });
