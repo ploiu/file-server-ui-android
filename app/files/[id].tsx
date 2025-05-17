@@ -10,19 +10,17 @@ import {
 } from '@/client/FileClient';
 import {
   ActivityIndicator,
-  Button,
   Chip,
   FAB,
-  Modal,
   Portal,
   Text,
-  TextInput,
   useTheme,
 } from 'react-native-paper';
 import FileEntry from '@/app/components/FileEntry';
 import {
   bytesToShorthand,
   formatFileName,
+  getFileExtension,
   getFileSizeAlias,
   stripTimeFromDate,
 } from '@/util/misc';
@@ -30,7 +28,7 @@ import { documentDirectory, getContentUriAsync } from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
 import TagList from '@/app/components/TagList';
 import Container from '@/app/components/Container';
-import { theme } from '@/app/_layout';
+import TextModal from '@/app/components/TextModal';
 
 enum States {
   LOADING,
@@ -79,15 +77,11 @@ export default function FileView() {
   const [modalState, setModalState] = useState(ModalStates.CLOSED);
   const [preview, setPreview] = useState<string>();
 
-  // to prevent re-renders when updating fields
-  const [tempName, setTempName] = useState('');
-
   useEffect(() => {
     (async () => {
       try {
         const parsedId = parseInt(id);
         const f = await getFileMetadata(parsedId);
-        setTempName(f.name);
         setFile(f);
         // don't want to hold up the ui thread, so no await here
         getFilePreview(parsedId).then(prev => {
@@ -115,11 +109,17 @@ export default function FileView() {
   );
 
   const submitFile = async (changes: Partial<FileApi>) => {
+    // file should always exist at this point because the ui elements that trigger this won't exist unless the file does. This is just to appease the typescript compiler
+    if (!file) {
+      return;
+    }
     try {
-      const newFile = await updateFile({ ...file!, ...changes });
+      // for convenience's sake, we should append the file's original extension if none was passed
+      if (changes.name && !/\..+$/.test(changes.name)) {
+        changes.name += getFileExtension(file);
+      }
+      const newFile = await updateFile({ ...file, ...changes });
       setFile(newFile);
-      // update the temp name to be the updated file name
-      setTempName(newFile.name);
       setModalState(ModalStates.CLOSED);
     } catch (e) {
       if (e instanceof Error) {
@@ -136,46 +136,35 @@ export default function FileView() {
   const hideModal = () => setModalState(ModalStates.CLOSED);
 
   const renderModalState = () => {
+    if (!file) {
+      return <></>;
+    }
     switch (modalState) {
       case ModalStates.ERROR:
         return <></>;
       case ModalStates.RENAME:
         return (
-          <Modal
-            visible
-            onDismiss={hideModal}
-            testID={'renameModal'}
-            contentContainerStyle={styles.editModal}>
-            {/*can't use value here because (even with no re-render), editing text makes the cursor jump all over the place and input characters in random order*/}
-            <TextInput
-              placeholder={file?.name}
-              label={'File Name'}
-              testID={'renameFileName'}
-              mode={'outlined'}
-              onChangeText={setTempName}
-            />
-            <View style={styles.buttonRow}>
-              <Button
-                icon={'cancel'}
-                mode={'elevated'}
-                onPress={hideModal}
-                style={styles.buttonRowButton}>
-                Cancel
-              </Button>
-              <Button
-                icon={'rename'}
-                mode={'contained'}
-                onPress={() => {
-                  submitFile({ name: tempName });
-                }}
-                style={styles.buttonRowButton}>
-                Rename
-              </Button>
-            </View>
-          </Modal>
+          <TextModal
+            label={'File Name'}
+            placeholder={file.name}
+            onSubmit={name => submitFile({ name })}
+            onCancel={hideModal}
+            submitButtonText={'Rename'}
+            submitIcon={'pencil'}
+            cancelIcon={'cancel'}
+          />
         );
       case ModalStates.ADD_TAG:
-        break;
+        return (
+          <TextModal
+            label={'Tag Name'}
+            onSubmit={title => submitFile({ tags: [...file.tags, { title }] })}
+            onCancel={hideModal}
+            submitButtonText={'Add Tag'}
+            submitIcon={'tag-plus'}
+            cancelIcon={'cancel'}
+          />
+        );
       case ModalStates.EDIT_TAG:
         break;
       case ModalStates.DELETE_CONFIRM:
@@ -187,19 +176,9 @@ export default function FileView() {
 
   const fabActions = [
     {
-      icon: 'delete',
-      label: 'Delete',
-      onPress: () => {},
-    },
-    {
-      icon: 'tag-plus',
-      label: 'Add Tag',
-      onPress: () => {},
-    },
-    {
-      icon: 'rename',
-      label: 'Rename',
-      onPress: () => setModalState(ModalStates.RENAME),
+      icon: 'floppy',
+      label: 'Save',
+      onPress: () => downloadFile(file!, { moveToExternalStorage: true }),
     },
     {
       icon: 'open-in-app',
@@ -207,9 +186,19 @@ export default function FileView() {
       onPress: () => downloadAndOpenFile(file!),
     },
     {
-      icon: 'floppy',
-      label: 'Save',
-      onPress: () => downloadFile(file!, { moveToExternalStorage: true }),
+      icon: 'rename',
+      label: 'Rename',
+      onPress: () => setModalState(ModalStates.RENAME),
+    },
+    {
+      icon: 'tag-plus',
+      label: 'Add Tag',
+      onPress: () => setModalState(ModalStates.ADD_TAG),
+    },
+    {
+      icon: 'delete',
+      label: 'Delete',
+      onPress: () => {},
     },
   ];
 
@@ -299,19 +288,5 @@ const styles = StyleSheet.create({
   },
   sizeChip: {
     marginLeft: 10,
-  },
-  editModal: {
-    padding: 10,
-    paddingTop: 30,
-    paddingBottom: 30,
-    backgroundColor: theme.colors.elevation.level4,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  buttonRowButton: {
-    margin: 10,
-    marginTop: 15,
   },
 });

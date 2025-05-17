@@ -2,7 +2,7 @@
 - use `npm start` to run
 
 # Testing Information
-- so far no tests until I have a better idea on what I want
+- each function should get its own test file inside a `__tests__` folder in the parent folder of the function. For example, a function named `whatever` in `./util/misc.ts` should have tests located in `./util/__tests__/whatever.test.ts`
 
 # Additional Information
 - this app depends on a separate project to be running on port 8000

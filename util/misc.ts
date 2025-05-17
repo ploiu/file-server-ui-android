@@ -1,3 +1,5 @@
+import { FileApi } from '@/models';
+
 const KIB = 1024;
 const MIB = KIB * 1024;
 const GIB = MIB * 1024;
@@ -75,5 +77,19 @@ export function getFileSizeAlias(
     return 'Large';
   } else {
     return 'ExtraLarge';
+  }
+}
+
+/**
+ * returns the extension for the file. If there is no extension, `''` will be returned instead.
+ * This extension includes the `.` that follows it
+ * @param file
+ */
+export function getFileExtension(file: FileApi): string {
+  const finalPeriod = file.name.lastIndexOf('.');
+  if (finalPeriod === -1) {
+    return '';
+  } else {
+    return file.name.substring(finalPeriod);
   }
 }

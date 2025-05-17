@@ -11,7 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "lint": "expo lint",
-    "fmt": "npx prettier app client util --write"
+    "fmt": "npx prettier app client util --write",
+    "check": "npm run fmt && npm run lint"
   },
   "jest": {
     "preset": "jest-expo",
