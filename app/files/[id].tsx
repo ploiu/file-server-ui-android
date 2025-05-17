@@ -174,62 +174,64 @@ export default function FileView() {
     }
   };
 
-  const fabActions = [
-    {
-      icon: 'floppy',
-      label: 'Save',
-      onPress: () => downloadFile(file!, { moveToExternalStorage: true }),
-    },
-    {
-      icon: 'open-in-app',
-      label: 'Open',
-      onPress: () => downloadAndOpenFile(file!),
-    },
-    {
-      icon: 'rename',
-      label: 'Rename',
-      onPress: () => setModalState(ModalStates.RENAME),
-    },
-    {
-      icon: 'tag-plus',
-      label: 'Add Tag',
-      onPress: () => setModalState(ModalStates.ADD_TAG),
-    },
-    {
-      icon: 'delete',
-      label: 'Delete',
-      onPress: () => {},
-    },
-  ];
+  const fabActions = file
+    ? [
+        {
+          icon: 'floppy',
+          label: 'Save',
+          onPress: () => downloadFile(file, { moveToExternalStorage: true }),
+        },
+        {
+          icon: 'open-in-app',
+          label: 'Open',
+          onPress: () => downloadAndOpenFile(file),
+        },
+        {
+          icon: 'rename',
+          label: 'Rename',
+          onPress: () => setModalState(ModalStates.RENAME),
+        },
+        {
+          icon: 'tag-plus',
+          label: 'Add Tag',
+          onPress: () => setModalState(ModalStates.ADD_TAG),
+        },
+        {
+          icon: 'delete',
+          label: 'Delete',
+          onPress: () => {},
+        },
+      ]
+    : [];
 
   const showingDetails = file ? (
     <View style={styles.detailsRoot}>
       <View style={styles.fileEntryContainer}>
         <FileEntry
-          fileName={file!.name}
-          fileType={file!.fileType!}
+          fileName={file.name}
+          fileType={file.fileType}
           preview={preview}
-          onTap={() => downloadAndOpenFile(file!)}
+          onTap={() => downloadAndOpenFile(file)}
         />
       </View>
       {/*file info*/}
       <Container style={{ borderRadius: theme.roundness }}>
-        <Text variant={'headlineSmall'}>Type: {file?.fileType}</Text>
+        <Text variant={'headlineSmall'}>Type: {file.fileType}</Text>
         {/*file size and chip*/}
         <View style={styles.sizeLine}>
           <Text variant={'headlineSmall'}>
-            Size: {bytesToShorthand(file?.size ?? 0)}
+            Size: {bytesToShorthand(file.size)}
           </Text>
           <Chip compact={true} icon={'ruler'} style={styles.sizeChip}>
-            {getFileSizeAlias(file?.size ?? 0)}
+            {getFileSizeAlias(file.size)}
           </Chip>
         </View>
         <Text variant={'headlineSmall'}>
-          Date Created: {stripTimeFromDate(file?.dateCreated ?? '')}
+          Date Created: {stripTimeFromDate(file.dateCreated)}
         </Text>
       </Container>
       {/*tags*/}
-      {file?.tags && file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
+      {file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
       {/*floating menu / delete button*/}
       {fabState === FabStates.TRASH ? (
         <FAB

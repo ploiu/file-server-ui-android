@@ -20,10 +20,12 @@ export type FileApi = {
   folderId?: number;
   name: string;
   tags: TagApi[];
-  size?: number;
-  dateCreated?: string;
-  fileType?: string;
+  size: number;
+  dateCreated: string;
+  fileType: string;
 };
+
+export type NewFileApi = Omit<FileApi, 'size' | 'dateCreated' | 'fileType'>;
 
 export enum FileTypes {
   Application,
@@ -98,7 +100,7 @@ export type FolderPreviews = Map<number, string>;
 // =====================
 
 export function isFolder(item: FolderApi | FileApi): item is FolderApi {
-  return "folders" in item;
+  return 'folders' in item;
 }
 
 export function isFile(item: FolderApi | FileApi): item is FileApi {
