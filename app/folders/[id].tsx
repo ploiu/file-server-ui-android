@@ -61,7 +61,7 @@ export default function FolderView() {
       setMetadata(info);
       setCombined([
         ...info.folders.sort((a, b) => a.name.localeCompare(b.name)),
-        ...info.files.sort((a, b) => a.name.localeCompare(b.name)),
+        ...info.files.sort((a, b) => a.id - b.id),
       ]);
       setState(States.LOADED);
       // await isn't needed here because it just holds up the return and isn't necessary for immediate rendering

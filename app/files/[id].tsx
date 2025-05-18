@@ -231,7 +231,10 @@ export default function FileView() {
         </Text>
       </Container>
       {/*tags*/}
-      {file.tags.length > 0 ? <TagList tags={file.tags} /> : null}
+      <TagList
+        tags={file.tags}
+        onAdd={() => setModalState(ModalStates.ADD_TAG)}
+      />
       {/*floating menu / delete button*/}
       {fabState === FabStates.TRASH ? (
         <FAB
