@@ -189,7 +189,7 @@ export default function FileView() {
             onConfirm={submitDelete}
             onCancel={() => setModalState(ModalStates.CLOSED)}
             cancelIcon={'cancel'}
-            confirmIcon={'trash'}
+            confirmIcon={'delete'}
           />
         );
       case ModalStates.CLOSED:
