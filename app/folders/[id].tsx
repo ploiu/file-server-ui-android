@@ -1,11 +1,12 @@
 import { FlatList, StyleSheet, Vibration, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { FileApi, FolderApi, FolderPreviews, isFolder } from '@/models';
 import { getFolderMetadata, getFolderPreviews } from '@/client/FolderClient';
 import FolderEntry from '@/app/components/FolderEntry';
 import FileEntry from '@/app/components/FileEntry';
 import { FolderCache, PreviewCache } from '@/util/cacheUtil';
+import { getFilePreview } from '@/client/FileClient';
 
 enum States {
   LOADING,
@@ -15,6 +16,80 @@ enum States {
   FOLDER_INFO,
   FILE_INFO,
   SELECTING,
+}
+
+export type FileListDelta = {
+  deletedFromPrevious: FileApi[];
+  addedFromPrevious: FileApi[];
+  changedFromPrevious: FileApi[];
+};
+
+/**
+ * performs a delta on the items in `previous` and `current`, returning an object that has the differences.
+ *
+ * The point of this delta is for caching preview purposes, so delta rules are a little specialized:
+ * - if a file id is in current but not in previous, it's counted in `addedFromPrevious`
+ * - if a file id is not in current but is in previous, it's counted in `deletedFromPrevious`
+ * - if a file type for an id is different in current but it is included in previous, it's included in `changedFromPrevious`
+ *
+ * @param previous
+ * @param current
+ */
+export function performFileListDelta(
+  previous: FileApi[],
+  current: FileApi[],
+): FileListDelta {
+  // maps are easier to use because it doesn't require us to do int <=> string casting
+  const previousIdIndex: Map<number, FileApi> = new Map();
+  const currentIdIndex: Map<number, FileApi> = new Map();
+  for (const item of previous) {
+    previousIdIndex.set(item.id, item);
+  }
+  for (const item of current) {
+    currentIdIndex.set(item.id, item);
+  }
+  const deletedFromPrevious = previousIdIndex
+    .entries()
+    .filter(([id]) => !(id in currentIdIndex))
+    .map(it => it[1])
+    .toArray();
+  const addedFromPrevious = currentIdIndex
+    .entries()
+    .filter(([id]) => !(id in previousIdIndex))
+    .map(it => it[1])
+    .toArray();
+  const changedFromPrevious: FileApi[] = [];
+  for (const [id, file] of currentIdIndex) {
+    if (previousIdIndex.has(id)) {
+      const previous = previousIdIndex.get(id)!;
+      if (previous.fileType !== file.fileType) {
+        changedFromPrevious.push(file);
+      }
+    }
+  }
+  return { deletedFromPrevious, addedFromPrevious, changedFromPrevious };
+}
+
+export async function cachePreviewsFromDelta(
+  folder: FolderApi,
+  delta: FileListDelta,
+): Promise<void> {
+  console.debug('delta: ', delta);
+  const filesToCache = [
+    ...delta.addedFromPrevious,
+    ...delta.changedFromPrevious,
+  ];
+  // the server is designed for low-end hardware, so we can't send too many requests at once
+  if (filesToCache.length <= 12) {
+    const promises: Promise<string | null>[] = [];
+    for (const f of filesToCache) {
+      promises.push(getFilePreview(f.id));
+    }
+    await Promise.all(promises);
+  } else {
+    // too many changes to pull manually, pull the whole folder
+    await getFolderPreviews(folder, true);
+  }
 }
 
 export default function FolderView() {
@@ -32,23 +107,11 @@ export default function FolderView() {
     if (!cached) {
       setPreviews(await getFolderPreviews(current));
     } else {
-      const cachedFiles = cached.files.map(f => String(f.name) + f.id);
-      const currentFiles = current.files.map(f => String(f.name) + f.id);
-      let lengthsDifferent = cachedFiles.length !== currentFiles.length;
-      let anyDifferent = false;
-      for (const cachedEntry of cachedFiles) {
-        if (!currentFiles.includes(cachedEntry)) {
-          anyDifferent = true;
-          break;
-        }
-      }
-      if (lengthsDifferent || anyDifferent) {
-        console.debug('lists do not match! clearing preview cache...');
-        // list is different, we need to delete preview cache and re-pull it to make sure we're up-to-date
-        await PreviewCache.deleteForFolder(current);
-        setPreviews(await getFolderPreviews(current));
-        return;
-      }
+      const cachedFiles = cached.files;
+      const currentFiles = current.files;
+      const delta = performFileListDelta(cachedFiles, currentFiles);
+      await cachePreviewsFromDelta(current, delta);
+      setPreviews(await getFolderPreviews(current));
     }
   };
 
@@ -74,15 +137,18 @@ export default function FolderView() {
     }
   };
 
-  useEffect(() => {
-    pullFolderMetadata().then(async folder => {
-      if (folder) {
-        const previews = await getFolderPreviews(folder);
-        setPreviews(previews);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      // TODO there will need to be some goofy history management with how deleting files affects history look into usePathname and useSegments
+      pullFolderMetadata().then(async folder => {
+        if (folder) {
+          const previews = await getFolderPreviews(folder);
+          setPreviews(previews);
+        }
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]),
+  );
 
   /** TODO need to think more on how I want to handle this
    * long press for drawer with options? short press for drawer but with big preview?

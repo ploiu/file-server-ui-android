@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { FileApi } from '@/models';
 import {
+  deleteFile,
   downloadFile,
   getFileMetadata,
   getFilePreview,
@@ -29,6 +30,8 @@ import * as IntentLauncher from 'expo-intent-launcher';
 import TagList from '@/app/components/TagList';
 import Container from '@/app/components/Container';
 import TextModal from '@/app/components/TextModal';
+import ConfirmModal from '@/app/components/ConfirmModal';
+import { router } from 'expo-router';
 
 enum States {
   LOADING,
@@ -108,6 +111,16 @@ export default function FileView() {
     </View>
   );
 
+  const submitDelete = () => {
+    if (file) {
+      setModalState(ModalStates.CLOSED);
+      router.replace(`/folders/${file.folderId}`);
+      deleteFile(file.id).catch(() => {
+        /* ignore errors */
+      });
+    }
+  };
+
   const submitFile = async (changes: Partial<FileApi>) => {
     // file should always exist at this point because the ui elements that trigger this won't exist unless the file does. This is just to appease the typescript compiler
     if (!file) {
@@ -168,7 +181,17 @@ export default function FileView() {
       case ModalStates.EDIT_TAG:
         break;
       case ModalStates.DELETE_CONFIRM:
-        break;
+        return (
+          <ConfirmModal
+            text={'Are you sure you want to delete this file?'}
+            confirmText={'Delete'}
+            cancelText={'Cancel'}
+            onConfirm={submitDelete}
+            onCancel={() => setModalState(ModalStates.CLOSED)}
+            cancelIcon={'cancel'}
+            confirmIcon={'trash'}
+          />
+        );
       case ModalStates.CLOSED:
         return <></>;
     }
@@ -199,7 +222,7 @@ export default function FileView() {
         {
           icon: 'delete',
           label: 'Delete',
-          onPress: () => {},
+          onPress: () => setModalState(ModalStates.DELETE_CONFIRM),
         },
       ]
     : [];

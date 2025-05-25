@@ -16,7 +16,6 @@ export default function TagList(props: TagListProps) {
         borderRadius: theme.roundness,
         paddingBottom: 5,
       }}>
-
       <FlatList
         numColumns={3}
         columnWrapperStyle={{ marginBottom: 6 }}

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { KeyValuePair } from '@react-native-async-storage/async-storage/lib/typescript/types';
-import { FolderApi, FolderPreviews } from '@/models';
+import { FileApi, FolderApi, FolderPreviews } from '@/models';
 
 /** list of prefixes used as part of cache keys, to be used by the methods in here to prevent cache collisions */
 enum prefixes {
@@ -162,5 +162,10 @@ export class PreviewCache {
     return deleteMultipleCacheItems(
       folder.files.map(file => this.#prefix + file.id),
     );
+  }
+
+  static async deleteMultiple(files: FileApi[]) {
+    // we don't care about waiting for deleting cache entries
+    return deleteMultipleCacheItems(files.map(f => this.#prefix + f.id));
   }
 }
