@@ -1,10 +1,10 @@
 import { Text, useTheme } from 'react-native-paper';
 import { Image, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import PloiuCon from '../../app/components/PloiuCon';
+import PloiuCon from '@/components/PloiuCon';
 import { memo, useEffect, useState } from 'react';
 import { determineIcon } from '@/util/iconUtil';
 import { formatFileName } from '@/util/misc';
-import Container from '@/app/components/Container';
+import Container from '@/components/Container';
 
 type FileEntryProps = {
   fileName: string;

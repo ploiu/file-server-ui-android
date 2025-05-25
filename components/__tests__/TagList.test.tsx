@@ -1,7 +1,7 @@
 import type { TagApi } from '@/models';
 import { render, userEvent } from '@testing-library/react-native';
 import { PaperProvider } from 'react-native-paper';
-import TagList from '@/app/components/TagList';
+import TagList from '@/components/TagList';
 
 describe('tags', () => {
   test('should show list of tags', () => {

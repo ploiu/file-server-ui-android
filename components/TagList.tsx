@@ -1,7 +1,7 @@
 import { TagApi } from '@/models';
 import { FlatList, StyleSheet } from 'react-native';
 import { Button, Chip, useTheme } from 'react-native-paper';
-import Container from '@/app/components/Container';
+import Container from '@/components/Container';
 
 export type TagListProps = {
   tags: TagApi[];

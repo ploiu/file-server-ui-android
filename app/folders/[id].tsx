@@ -3,8 +3,8 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { FileApi, FolderApi, FolderPreviews, isFolder } from '@/models';
 import { getFolderMetadata, getFolderPreviews } from '@/client/FolderClient';
-import FolderEntry from '@/app/components/FolderEntry';
-import FileEntry from '@/app/components/FileEntry';
+import FolderEntry from '@/components/FolderEntry';
+import FileEntry from '@/components/FileEntry';
 import { FolderCache, PreviewCache } from '@/util/cacheUtil';
 import { getFilePreview } from '@/client/FileClient';
 

@@ -1,4 +1,4 @@
-import { Icons } from '@/app/components/PloiuCon';
+import { Icons } from '@/components/PloiuCon';
 import { FileTypes } from '@/models';
 
 export function determineIcon(type?: string): Icons {

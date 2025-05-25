@@ -17,7 +17,7 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
-import FileEntry from '@/app/components/FileEntry';
+import FileEntry from '@/components/FileEntry';
 import {
   bytesToShorthand,
   formatFileName,
@@ -27,10 +27,10 @@ import {
 } from '@/util/misc';
 import { documentDirectory, getContentUriAsync } from 'expo-file-system';
 import * as IntentLauncher from 'expo-intent-launcher';
-import TagList from '@/app/components/TagList';
-import Container from '@/app/components/Container';
-import TextModal from '@/app/components/TextModal';
-import ConfirmModal from '@/app/components/ConfirmModal';
+import TagList from '@/components/TagList';
+import Container from '@/components/Container';
+import TextModal from '@/components/TextModal';
+import ConfirmModal from '@/components/ConfirmModal';
 import { router } from 'expo-router';
 
 enum States {

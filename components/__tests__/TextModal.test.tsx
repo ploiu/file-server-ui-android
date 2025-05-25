@@ -1,4 +1,4 @@
-import TextModal from '@/app/components/TextModal';
+import TextModal from '@/components/TextModal';
 import { render, userEvent } from '@testing-library/react-native';
 import { PaperProvider } from 'react-native-paper';
 jest.mock('react-native-reanimated', () =>

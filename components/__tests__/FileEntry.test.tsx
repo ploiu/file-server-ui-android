@@ -1,5 +1,5 @@
 import { render, userEvent } from '@testing-library/react-native';
-import FileEntry from '@/app/components/FileEntry';
+import FileEntry from '@/components/FileEntry';
 import { FileApi } from '@/models';
 
 describe('icon', () => {

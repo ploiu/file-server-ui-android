@@ -2,8 +2,8 @@ import { FolderApi } from '@/models';
 import { Text, useTheme } from 'react-native-paper';
 import { StyleSheet, TouchableWithoutFeedback, Vibration } from 'react-native';
 import { router } from 'expo-router';
-import PloiuCon from '../../app/components/PloiuCon';
-import Container from '@/app/components/Container';
+import PloiuCon from '@/components/PloiuCon';
+import Container from '@/components/Container';
 
 type FolderEntryProps = {
   folder: FolderApi;
