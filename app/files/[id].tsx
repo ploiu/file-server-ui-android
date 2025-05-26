@@ -70,12 +70,14 @@ async function downloadAndOpenFile(file: FileApi) {
   const url =
     `${documentDirectory}${file.id}_${formatFileName(file.name)}`.toLowerCase();
   const contentUri = await getContentUriAsync(url);
+  // noinspection ES6MissingAwait
   IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
     data: contentUri,
     flags: 1,
   });
 }
 
+// TODO drag and drop tags to trash
 export default function FileView() {
   const theme = useTheme();
   const { id } = useLocalSearchParams() as { id: string };
@@ -140,9 +142,7 @@ export default function FileView() {
       previewStartEventX.value = e.x;
       previewStartEventY.value = e.y;
     })
-    .onStart(e => {
-      runOnJS(startDraggingPreview)();
-    })
+    .onStart(() => runOnJS(startDraggingPreview)())
     .onEnd(() => {
       runOnJS(stopDraggingPreview)();
       previewTranslateX.value = withSpring(0);
@@ -340,6 +340,9 @@ export default function FileView() {
       <TagList
         tags={file.tags}
         onAdd={() => setModalState(ModalStates.ADD_TAG)}
+        onDelete={deleted =>
+          submitFile({ tags: file.tags.filter(it => it.title !== deleted) })
+        }
       />
       {/*floating menu / delete button*/}
       {fabState === FabStates.TRASH ? (
