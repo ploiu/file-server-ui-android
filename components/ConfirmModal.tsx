@@ -20,7 +20,7 @@ export default function ConfirmModal(props: ConfirmModalProps) {
       visible
       onDismiss={props.onCancel}
       contentContainerStyle={styles.modal}>
-      <Text>{props.text}</Text>
+      <Text variant={'headlineSmall'}>{props.text}</Text>
       <View style={styles.buttonRow}>
         <Button
           testID={'cancelButton'}

@@ -18,7 +18,6 @@ const FolderEntry = (props: FolderEntryProps) => {
 
   const pressAndHold = () => {
     Vibration.vibrate(25);
-    console.log('pressed and held');
   };
 
   return (

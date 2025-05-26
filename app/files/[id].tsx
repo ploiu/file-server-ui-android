@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { LayoutRectangle, StyleSheet, Vibration, View } from 'react-native';
 import { useCallback, useState } from 'react';
 import { FileApi } from '@/models';
 import {
@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Chip,
   FAB,
+  MD3Colors,
   Portal,
   Text,
   useTheme,
@@ -31,6 +32,14 @@ import TagList from '@/components/TagList';
 import Container from '@/components/Container';
 import TextModal from '@/components/TextModal';
 import ConfirmModal from '@/components/ConfirmModal';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  runOnJS,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import Icon from '@react-native-vector-icons/material-design-icons';
 
 enum States {
   LOADING,
@@ -78,6 +87,67 @@ export default function FileView() {
   const [fabState, setFabState] = useState(FabStates.CLOSED);
   const [modalState, setModalState] = useState(ModalStates.CLOSED);
   const [preview, setPreview] = useState<string>();
+  // used to change styles when dragging and dropping the file preview
+  const [isDraggingFilePreview, setIsDraggingFilePreview] = useState(false);
+  const [isHoveringOverTrash, setIsHoveringOverTrash] = useState(false);
+  const previewStartEventX = useSharedValue(0);
+  const previewStartEventY = useSharedValue(0);
+  const previewTranslateX = useSharedValue(0);
+  const previewTranslateY = useSharedValue(0);
+  // used to tell when the file preview or tag is dragged onto the trash icon
+  const [trashLayout, setTrashLayout] = useState<LayoutRectangle>();
+
+  const startDraggingPreview = () => {
+    Vibration.vibrate(25);
+    setFabState(FabStates.TRASH);
+    setIsDraggingFilePreview(true);
+  };
+
+  function calculatePreviewIntersectsTrash(yPos: number): boolean {
+    if (!trashLayout) {
+      return false;
+    }
+    const minY = trashLayout.y;
+    const maxY = trashLayout.y + trashLayout.height;
+    // we don't care about x position because the trash View takes up the entire screen width
+    return yPos > minY && yPos < maxY;
+  }
+
+  const onContinueDraggingPreview = () => {
+    setIsHoveringOverTrash(
+      calculatePreviewIntersectsTrash(previewTranslateY.value),
+    );
+  };
+
+  const stopDraggingPreview = () => {
+    setFabState(FabStates.CLOSED);
+    setIsDraggingFilePreview(false);
+    if (calculatePreviewIntersectsTrash(previewTranslateY.value)) {
+      setModalState(ModalStates.DELETE_CONFIRM);
+    }
+  };
+
+  const previewDragHandler = Gesture.Pan()
+    .onUpdate(e => {
+      previewTranslateX.value =
+        e.translationX + previewStartEventX.value - 175 / 2;
+      previewTranslateY.value =
+        e.translationY + previewStartEventY.value - 175 / 2;
+      runOnJS(onContinueDraggingPreview)();
+    })
+    .activateAfterLongPress(250)
+    .onBegin(e => {
+      previewStartEventX.value = e.x;
+      previewStartEventY.value = e.y;
+    })
+    .onStart(e => {
+      runOnJS(startDraggingPreview)();
+    })
+    .onEnd(() => {
+      runOnJS(stopDraggingPreview)();
+      previewTranslateX.value = withSpring(0);
+      previewTranslateY.value = withTiming(0);
+    });
 
   useFocusEffect(
     useCallback(() => {
@@ -230,14 +300,26 @@ export default function FileView() {
 
   const showingDetails = file ? (
     <View style={styles.detailsRoot}>
-      <View style={styles.fileEntryContainer}>
-        <FileEntry
-          fileName={file.name}
-          fileType={file.fileType}
-          preview={preview}
-          onTap={() => downloadAndOpenFile(file)}
-        />
-      </View>
+      <GestureDetector gesture={previewDragHandler}>
+        <Animated.View
+          style={[
+            styles.fileEntryContainer,
+            {
+              transform: [
+                { translateX: previewTranslateX },
+                { translateY: previewTranslateY },
+              ],
+            },
+            isDraggingFilePreview ? { width: 175 } : {},
+          ]}>
+          <FileEntry
+            fileName={file.name}
+            fileType={file.fileType}
+            preview={preview}
+            onTap={() => downloadAndOpenFile(file)}
+          />
+        </Animated.View>
+      </GestureDetector>
       {/*file info*/}
       <Container style={{ borderRadius: theme.roundness }}>
         <Text variant={'headlineSmall'}>Type: {file.fileType}</Text>
@@ -261,12 +343,29 @@ export default function FileView() {
       />
       {/*floating menu / delete button*/}
       {fabState === FabStates.TRASH ? (
-        <FAB
-          testID={'deleteFab'}
-          style={{ borderRadius: theme.roundness }}
-          variant={'tertiary'}
-          icon={'delete'}
-        />
+        <View
+          testID={'deleteArea'}
+          style={[
+            styles.deleteArea,
+            { borderRadius: theme.roundness },
+            isHoveringOverTrash
+              ? {
+                  backgroundColor: MD3Colors.error50,
+                }
+              : {},
+          ]}
+          onLayout={e => setTrashLayout(e.nativeEvent.layout)}>
+          <Text variant={'displayMedium'}>
+            <Icon
+              name={'delete'}
+              size={45}
+              color={
+                isHoveringOverTrash ? MD3Colors.error20 : MD3Colors.error50
+              }
+            />{' '}
+            Delete
+          </Text>
+        </View>
       ) : (
         <Portal>
           <FAB.Group
@@ -311,11 +410,23 @@ const styles = StyleSheet.create({
   },
   fileEntryContainer: {
     flex: 0.3,
+    elevation: 3,
+    zIndex: 3,
+    transform: [{ translateX: 0 }, { translateY: 0 }],
   },
   sizeLine: {
     flexDirection: 'row',
   },
   sizeChip: {
     marginLeft: 10,
+  },
+  deleteArea: {
+    borderStyle: 'dashed',
+    borderColor: MD3Colors.error60,
+    borderWidth: 2,
+    flex: 0.4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
   },
 });

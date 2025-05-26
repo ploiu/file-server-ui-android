@@ -2,20 +2,23 @@ import { Stack } from 'expo-router';
 import React from 'react';
 import { MD3DarkTheme, PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
-      <StatusBar
-        barStyle={'light-content'}
-        backgroundColor={theme.colors.background}
-      />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: theme.colors.background },
-        }}
-      />
+      <GestureHandlerRootView>
+        <StatusBar
+          barStyle={'light-content'}
+          backgroundColor={theme.colors.background}
+        />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: theme.colors.background },
+          }}
+        />
+      </GestureHandlerRootView>
     </PaperProvider>
   );
 }
@@ -33,10 +36,10 @@ export const theme = {
     onSecondary: 'rgb(0, 54, 61)',
     secondaryContainer: 'rgb(0, 79, 88)',
     onSecondaryContainer: 'rgb(151, 240, 255)',
-    tertiary: '#BF3959',
-    onTertiary: '#EF476F',
-    tertiaryContainer: '#EF476F',
-    onTertiaryContainer: '#8F2B43',
+    tertiary: 'rgb(228, 181, 255)',
+    onTertiary: 'rgb(72, 24, 103)',
+    tertiaryContainer: 'rgb(96, 49, 127)',
+    onTertiaryContainer: 'rgb(244, 218, 255)',
     error: 'rgb(255, 180, 171)',
     onError: 'rgb(105, 0, 5)',
     errorContainer: 'rgb(147, 0, 10)',

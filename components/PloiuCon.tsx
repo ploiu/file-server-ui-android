@@ -37,57 +37,35 @@ export type PloiuConProps = Omit<ImageProps, 'source'> & {
   icon: Icons;
 };
 
+const icons: Record<Icons, ImageRequireSource> = {
+  'file-application': require('@/assets/images/application.png'),
+  'file-archive': require('@/assets/images/archive.png'),
+  'file-audio': require('@/assets/images/audio.png'),
+  'file-cad': require('@/assets/images/cad.png'),
+  'file-code': require('@/assets/images/code.png'),
+  'file-configuration': require('@/assets/images/configuration.png'),
+  'file-diagram': require('@/assets/images/diagram.png'),
+  'file-document': require('@/assets/images/document.png'),
+  'file-font': require('@/assets/images/font.png'),
+  'file-image': require('@/assets/images/image.png'),
+  'file-material': require('@/assets/images/material.png'),
+  'file-message': require('@/assets/images/message.png'),
+  'file-model': require('@/assets/images/model.png'),
+  'file-object': require('@/assets/images/object.png'),
+  'file-presentation': require('@/assets/images/presentation.png'),
+  'file-rom': require('@/assets/images/rom.png'),
+  'file-save': require('@/assets/images/savefile.png'),
+  'file-spreadsheet': require('@/assets/images/spreadsheet.png'),
+  'file-text': require('@/assets/images/text.png'),
+  'file-unknown': require('@/assets/images/unknown.png'),
+  'file-video': require('@/assets/images/video.png'),
+  'folder': require('@/assets/images/folder.png'),
+  'plus': require('@/assets/images/plus.png'),
+};
+
 // TODO because we load so many images at a time, this might have poor performance
 function pickImage(img: Icons): ImageRequireSource {
-  // react's require is a bit different from node's, so we can't just use an if statement and have to map out everything manually
-  switch (img) {
-    case 'file-application':
-      return require('@/assets/images/application.png');
-    case 'file-archive':
-      return require('@/assets/images/archive.png');
-    case 'file-audio':
-      return require('@/assets/images/audio.png');
-    case 'file-cad':
-      return require('@/assets/images/cad.png');
-    case 'file-code':
-      return require('@/assets/images/code.png');
-    case 'file-configuration':
-      return require('@/assets/images/configuration.png');
-    case 'file-diagram':
-      return require('@/assets/images/diagram.png');
-    case 'file-document':
-      return require('@/assets/images/document.png');
-    case 'file-unknown':
-      return require('@/assets/images/unknown.png');
-    case 'folder':
-      return require('@/assets/images/folder.png');
-    case 'file-font':
-      return require('@/assets/images/font.png');
-    case 'file-image':
-      return require('@/assets/images/image.png');
-    case 'file-material':
-      return require('@/assets/images/material.png');
-    case 'file-message':
-      return require('@/assets/images/message.png');
-    case 'file-model':
-      return require('@/assets/images/model.png');
-    case 'file-object':
-      return require('@/assets/images/object.png');
-    case 'plus':
-      return require('@/assets/images/plus.png');
-    case 'file-presentation':
-      return require('@/assets/images/presentation.png');
-    case 'file-rom':
-      return require('@/assets/images/rom.png');
-    case 'file-save':
-      return require('@/assets/images/savefile.png');
-    case 'file-spreadsheet':
-      return require('@/assets/images/spreadsheet.png');
-    case 'file-text':
-      return require('@/assets/images/text.png');
-    case 'file-video':
-      return require('@/assets/images/video.png');
-  }
+  return icons[img];
 }
 
 export default function PloiuCon(props: PloiuConProps) {
