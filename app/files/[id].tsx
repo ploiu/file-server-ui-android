@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FileApi } from '@/models';
 import {
   deleteFile,
@@ -31,7 +31,6 @@ import TagList from '@/components/TagList';
 import Container from '@/components/Container';
 import TextModal from '@/components/TextModal';
 import ConfirmModal from '@/components/ConfirmModal';
-import { router } from 'expo-router';
 
 enum States {
   LOADING,
@@ -80,30 +79,32 @@ export default function FileView() {
   const [modalState, setModalState] = useState(ModalStates.CLOSED);
   const [preview, setPreview] = useState<string>();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const parsedId = parseInt(id);
-        const f = await getFileMetadata(parsedId);
-        setFile(f);
-        // don't want to hold up the ui thread, so no await here
-        getFilePreview(parsedId).then(prev => {
-          if (prev) {
-            setPreview(prev);
+  useFocusEffect(
+    useCallback(() => {
+      (async () => {
+        try {
+          const parsedId = parseInt(id);
+          const f = await getFileMetadata(parsedId);
+          setFile(f);
+          // don't want to hold up the ui thread, so no await here
+          getFilePreview(parsedId).then(prev => {
+            if (prev) {
+              setPreview(prev);
+            }
+          });
+          setCurrentState(States.SHOWING_DETAILS);
+        } catch (e) {
+          if (typeof e === 'string') {
+            console.trace(`Failed to pull file with id ${id}: `, e);
+            setErrorMessage(e);
+          } else if (e instanceof Error) {
+            console.trace(`Failed to pull file with id ${id}: `, e);
+            setErrorMessage(e.message);
           }
-        });
-        setCurrentState(States.SHOWING_DETAILS);
-      } catch (e) {
-        if (typeof e === 'string') {
-          console.trace(`Failed to pull file with id ${id}: `, e);
-          setErrorMessage(e);
-        } else if (e instanceof Error) {
-          console.trace(`Failed to pull file with id ${id}: `, e);
-          setErrorMessage(e.message);
         }
-      }
-    })();
-  }, [id]);
+      })();
+    }, [id]),
+  );
 
   const loading = (
     <View>

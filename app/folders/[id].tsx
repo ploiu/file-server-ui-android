@@ -1,5 +1,10 @@
 import { FlatList, StyleSheet, Vibration, View } from 'react-native';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { FileApi, FolderApi, FolderPreviews, isFolder } from '@/models';
 import { getFolderMetadata, getFolderPreviews } from '@/client/FolderClient';
@@ -98,6 +103,7 @@ export default function FolderView() {
   const [combined, setCombined] = useState<(FolderApi | FileApi)[]>([]);
   const [previews, setPreviews] = useState<FolderPreviews>(new Map());
   const { id } = useLocalSearchParams();
+  const navigation = useNavigation();
 
   const handlePreviews = async (
     cached: FolderApi | null,
@@ -139,7 +145,20 @@ export default function FolderView() {
 
   useFocusEffect(
     useCallback(() => {
-      // TODO there will need to be some goofy history management with how deleting files affects history look into usePathname and useSegments
+      const routeState = navigation.getState()?.routes ?? [];
+      /* when deleting a file, there will be the same route twice in a row in the history when we navigate back to the containing folder.
+          We need to pop that last entry and go to the previous one to fix back navigation */
+      if (routeState.length > 1) {
+        const current = routeState[routeState.length - 1];
+        const previous = routeState[routeState.length - 2];
+        if (
+          current.name === previous.name &&
+          (current.params as Record<string, string>)['id'] ===
+            (previous.params as Record<string, string>)['id']
+        ) {
+          navigation.goBack();
+        }
+      }
       pullFolderMetadata().then(async folder => {
         if (folder) {
           const previews = await getFolderPreviews(folder);
