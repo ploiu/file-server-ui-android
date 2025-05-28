@@ -1,4 +1,3 @@
-import { FileApi } from '@/models';
 import {
   act,
   render,
@@ -23,7 +22,7 @@ jest.mock('@/client/FileClient', () => ({
       size: 50 * 1024,
       tags: [{ id: 1, title: 'test tag' }],
       folderId: 0,
-    } as FileApi),
+    }),
   ),
   getFilePreview: jest.fn(() => Promise.resolve(null)),
 }));
@@ -33,26 +32,21 @@ beforeEach(() => {
 });
 afterEach(() => jest.useRealTimers());
 
-jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.runOnJS = fn => fn;
-  Reanimated.withSpring = value => value;
-  Reanimated.withTiming = value => value;
-  return Reanimated;
+const actualUseState = React.useState;
+const setStateMock = jest.fn();
+jest.spyOn(React, 'useState').mockImplementation(initial => {
+  const [state, setState] = actualUseState(initial);
+  const wrappedSetter = value => {
+    setStateMock(value);
+    return setState(typeof value === 'function' ? value(state) : value);
+  };
+  return [state, wrappedSetter];
 });
 
 describe('trash state', () => {
+  beforeEach(() => globalThis.supressConsoleForAct());
+  afterAll(() => globalThis.restoreConsole());
   test('should show trash view when starting to drag', async () => {
-    const actualUseState = React.useState;
-    const setStateMock = jest.fn();
-    jest.spyOn(React, 'useState').mockImplementation((initial: any) => {
-      const [state, setState] = actualUseState(initial);
-      const wrappedSetter = (value: any) => {
-        setStateMock(value);
-        return setState(typeof value === 'function' ? value(state) : value);
-      };
-      return [state, wrappedSetter];
-    });
     const rendered = render(
       <PaperProvider>
         <GestureHandlerRootView>

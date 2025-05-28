@@ -10,4 +10,14 @@ module.exports = {
     ".idea/*",
     ".vscode/*"
   ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.*"
+      ],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
 };
