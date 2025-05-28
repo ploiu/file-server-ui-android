@@ -41,27 +41,27 @@ import Animated, {
 } from 'react-native-reanimated';
 import Icon from '@react-native-vector-icons/material-design-icons';
 
-enum States {
-  LOADING,
-  SHOWING_DETAILS,
+export enum States {
+  LOADING = 'LOADING',
+  SHOWING_DETAILS = 'SHOWING_DETAILS',
 }
 
-enum FabStates {
+export enum FabStates {
   /** menu is closed but trash isn't showing */
-  CLOSED,
+  CLOSED = 'CLOSED',
   /** regular fab doesn't exist, instead trash fab shows */
-  TRASH,
+  TRASH = 'TRASH',
   /** fab is open */
-  OPEN,
+  OPEN = 'OPEN',
 }
 
-enum ModalStates {
-  RENAME,
-  ADD_TAG,
-  EDIT_TAG,
-  DELETE_CONFIRM,
-  CLOSED,
-  ERROR,
+export enum ModalStates {
+  RENAME = 'RENAME',
+  ADD_TAG = 'ADD_TAG',
+  EDIT_TAG = 'EDIT_TAG',
+  DELETE_CONFIRM = 'DELETE_CONFIRM',
+  CLOSED = 'CLOSED',
+  ERROR = 'ERROR',
 }
 
 async function downloadAndOpenFile(file: FileApi) {
@@ -100,6 +100,7 @@ export default function FileView() {
   const [trashLayout, setTrashLayout] = useState<LayoutRectangle>();
 
   const startDraggingPreview = () => {
+    setFabState(FabStates.TRASH);
     Vibration.vibrate(25);
     setIsDraggingFilePreview(true);
   };
@@ -121,7 +122,6 @@ export default function FileView() {
   };
 
   const stopDraggingPreview = () => {
-    console.error('ending gesture')
     setFabState(FabStates.CLOSED);
     setIsDraggingFilePreview(false);
     if (calculatePreviewIntersectsTrash(previewTranslateY.value)) {

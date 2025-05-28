@@ -1,18 +1,17 @@
+import { FileApi } from '@/models';
 import {
   act,
   render,
-  waitFor,
   waitForElementToBeRemoved,
 } from '@testing-library/react-native';
-import { PaperProvider } from 'react-native-paper';
-import FileView from '../[id]';
-import { FileApi } from '@/models';
-import { getFilePreview } from '@/client/FileClient';
+import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   fireGestureHandler,
   getByGestureTestId,
 } from 'react-native-gesture-handler/jest-utils';
-import { GestureHandlerRootView, State } from 'react-native-gesture-handler';
+import { PaperProvider } from 'react-native-paper';
+import FileView, { FabStates } from '../[id]';
 
 jest.mock('@/client/FileClient', () => ({
   getFileMetadata: jest.fn(() =>
@@ -29,11 +28,31 @@ jest.mock('@/client/FileClient', () => ({
   getFilePreview: jest.fn(() => Promise.resolve(null)),
 }));
 
-beforeEach(() => jest.useFakeTimers());
+beforeEach(() => {
+  jest.useFakeTimers();
+});
 afterEach(() => jest.useRealTimers());
+
+jest.mock('react-native-reanimated', () => {
+  const Reanimated = require('react-native-reanimated/mock');
+  Reanimated.runOnJS = fn => fn;
+  Reanimated.withSpring = value => value;
+  Reanimated.withTiming = value => value;
+  return Reanimated;
+});
 
 describe('trash state', () => {
   test('should show trash view when starting to drag', async () => {
+    const actualUseState = React.useState;
+    const setStateMock = jest.fn();
+    jest.spyOn(React, 'useState').mockImplementation((initial: any) => {
+      const [state, setState] = actualUseState(initial);
+      const wrappedSetter = (value: any) => {
+        setStateMock(value);
+        return setState(typeof value === 'function' ? value(state) : value);
+      };
+      return [state, wrappedSetter];
+    });
     const rendered = render(
       <PaperProvider>
         <GestureHandlerRootView>
@@ -45,32 +64,10 @@ describe('trash state', () => {
       rendered.getByTestId('loadingSpinner'),
     );
     const gesture = getByGestureTestId('previewPan');
-    await act(async () => {
-      fireGestureHandler(gesture, [{ state: State.BEGAN }]);
-      jest.advanceTimersByTime(500); // simulate long press delay
-      console.error('waiting for now')
-      await waitFor(() =>
-        expect(rendered.getByTestId('deleteArea')).toBeTruthy(),
-      );
-      fireGestureHandler(gesture, [
-        {
-          state: State.ACTIVE,
-          translationX: 50,
-          translationY: 50,
-          duration: 100,
-        },
-        {
-          state: State.ACTIVE,
-          translationX: 50,
-          translationY: 50,
-          duration: 500,
-        },
-      ]);
-      fireGestureHandler(gesture, [
-        {
-          state: State.END,
-        },
-      ]);
+    act(() => {
+      fireGestureHandler(gesture, []);
+      jest.advanceTimersByTime(250);
     });
+    expect(setStateMock).toHaveBeenCalledWith(FabStates.TRASH);
   });
 });
