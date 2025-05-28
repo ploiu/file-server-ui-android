@@ -1,6 +1,6 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { LayoutRectangle, StyleSheet, Vibration, View } from 'react-native';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FileApi } from '@/models';
 import {
   deleteFile,
@@ -101,7 +101,6 @@ export default function FileView() {
 
   const startDraggingPreview = () => {
     Vibration.vibrate(25);
-    setFabState(FabStates.TRASH);
     setIsDraggingFilePreview(true);
   };
 
@@ -122,6 +121,7 @@ export default function FileView() {
   };
 
   const stopDraggingPreview = () => {
+    console.error('ending gesture')
     setFabState(FabStates.CLOSED);
     setIsDraggingFilePreview(false);
     if (calculatePreviewIntersectsTrash(previewTranslateY.value)) {
@@ -130,6 +130,13 @@ export default function FileView() {
   };
 
   const previewDragHandler = Gesture.Pan()
+    .withTestId('previewPan')
+    .activateAfterLongPress(250)
+    .onBegin(e => {
+      previewStartEventX.value = e.x;
+      previewStartEventY.value = e.y;
+    })
+    .onStart(() => runOnJS(startDraggingPreview)())
     .onUpdate(e => {
       previewTranslateX.value =
         e.translationX + previewStartEventX.value - 175 / 2;
@@ -137,19 +144,15 @@ export default function FileView() {
         e.translationY + previewStartEventY.value - 175 / 2;
       runOnJS(onContinueDraggingPreview)();
     })
-    .activateAfterLongPress(250)
-    .onBegin(e => {
-      previewStartEventX.value = e.x;
-      previewStartEventY.value = e.y;
-    })
-    .onStart(() => runOnJS(startDraggingPreview)())
     .onEnd(() => {
       runOnJS(stopDraggingPreview)();
       previewTranslateX.value = withSpring(0);
       previewTranslateY.value = withTiming(0);
     });
 
-  useFocusEffect(
+  // useFocusEffect doesn't work during tests, so we need to use useEffect during those
+  const effect = process.env.NODE_ENV === 'test' ? useEffect : useFocusEffect;
+  effect(
     useCallback(() => {
       (async () => {
         try {
@@ -177,7 +180,7 @@ export default function FileView() {
   );
 
   const loading = (
-    <View>
+    <View testID='loadingSpinner'>
       <ActivityIndicator size={50} />
     </View>
   );
@@ -341,7 +344,9 @@ export default function FileView() {
         tags={file.tags}
         onAdd={() => setModalState(ModalStates.ADD_TAG)}
         onDelete={deleted =>
-          submitFile({ tags: file.tags.filter(it => it.title !== deleted) })
+          submitFile({
+            tags: file.tags.filter(it => it.title !== deleted),
+          })
         }
       />
       {/*floating menu / delete button*/}
@@ -372,6 +377,7 @@ export default function FileView() {
       ) : (
         <Portal>
           <FAB.Group
+            testID='actionGroup'
             icon={'menu'}
             onStateChange={({ open }) =>
               setFabState(open ? FabStates.OPEN : FabStates.CLOSED)
