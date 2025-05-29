@@ -20,6 +20,7 @@ This is a react native application using expo. The style framework is react-nati
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
+    <!-- this line is for the expo dev server. If your file server runs with https enabled, you don't have to worry about this leaking your info -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="user" />
