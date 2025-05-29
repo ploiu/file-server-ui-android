@@ -8,8 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest",
-    "test:watch": "jest --watchAll",
+    "test": "jest --coverage",
+    "test:watch": "jest --watchAll --coverage",
     "lint": "expo lint",
     "fmt": "npx prettier app client util --write",
     "check": "npm run fmt && npm run lint"
@@ -17,8 +17,9 @@
   "jest": {
     "preset": "jest-expo",
     "setupFilesAfterEnv": ["./jest.setup.js", "./node_modules/react-native-gesture-handler/jestSetup.js"],
-    "modulePathIgnorePatterns": [
-      "app-example"
+    "coveragePathIgnorePatterns": [
+      "./util/iconUtil.ts",
+      "./assets/images"
     ]
   },
   "dependencies": {

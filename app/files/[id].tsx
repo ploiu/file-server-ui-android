@@ -77,7 +77,6 @@ async function downloadAndOpenFile(file: FileApi) {
   });
 }
 
-// TODO drag and drop tags to trash
 export default function FileView() {
   const theme = useTheme();
   const { id } = useLocalSearchParams() as { id: string };
@@ -234,7 +233,11 @@ export default function FileView() {
           <TextModal
             label={'File Name'}
             placeholder={file.name}
-            onSubmit={name => submitFile({ name })}
+            onSubmit={name => {
+              if (name.trim().length > 0) {
+                submitFile({ name });
+              }
+            }}
             onCancel={hideModal}
             submitButtonText={'Rename'}
             submitIcon={'pencil'}
@@ -281,6 +284,7 @@ export default function FileView() {
         {
           icon: 'open-in-app',
           label: 'Open',
+          testID: 'openFile',
           onPress: () => downloadAndOpenFile(file),
         },
         {
