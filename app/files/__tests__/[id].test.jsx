@@ -12,7 +12,7 @@ import {
 import { PaperProvider } from 'react-native-paper';
 import FileView, { FabStates, ModalStates } from '../[id]';
 import * as IntentLauncher from 'expo-intent-launcher';
-import { downloadFile, updateFile } from '@/client/FileClient';
+import { deleteFile, downloadFile, updateFile } from '@/client/FileClient';
 
 jest.mock('@/client/FileClient', () => ({
   getFileMetadata: jest.fn(() =>
@@ -28,7 +28,8 @@ jest.mock('@/client/FileClient', () => ({
   ),
   getFilePreview: jest.fn(() => Promise.resolve(null)),
   downloadFile: jest.fn(() => Promise.resolve()),
-  updateFile: jest.fn(() => Promise.resolve()),
+  updateFile: jest.fn(file => Promise.resolve(file)),
+  deleteFile: jest.fn(() => Promise.resolve()),
 }));
 
 // copied from expo's own setup.js file because for some reason they don't mock all of their functions
@@ -51,6 +52,15 @@ jest.mock('expo-file-system', () => ({
 // Mock IntentLauncher
 jest.mock('expo-intent-launcher', () => ({
   startActivityAsync: jest.fn(() => Promise.resolve()),
+}));
+
+// Mock Expo Router
+jest.mock('expo-router', () => ({
+  router: {
+    replace: jest.fn(),
+  },
+  useFocusEffect: jest.fn(callback => callback()),
+  useLocalSearchParams: jest.fn(() => ({ id: '0' })),
 }));
 
 beforeEach(() => {
@@ -94,6 +104,9 @@ describe('trash state', () => {
 describe('fab menu', () => {
   beforeEach(() => globalThis.supressConsoleForAct());
   afterAll(() => globalThis.restoreConsole());
+
+  // Import router for testing navigation
+  const { router } = require('expo-router');
 
   describe('open', () => {
     test('should call downloadFile with moveToExternalStorage: false and attempt to use IntentLauncher', async () => {
@@ -339,6 +352,293 @@ describe('fab menu', () => {
             name: 'newname.txt',
           }),
         );
+      });
+    });
+  });
+
+  describe('add tag', () => {
+    test('should set modalState to ADD_TAG', async () => {
+      const rendered = render(
+        <PaperProvider>
+          <FileView />
+        </PaperProvider>,
+      );
+
+      // Wait for loading spinner to be removed
+      await waitForElementToBeRemoved(() =>
+        rendered.getByTestId('loadingSpinner'),
+      );
+
+      // Find and press the FAB button to open the menu
+      const fabButton = rendered.getByTestId('actionGroup');
+      await userEvent.press(fabButton);
+
+      // Find and press the Add Tag action
+      const addTagButton = rendered.getByTestId('addTag', {
+        includeHiddenElements: true,
+      });
+      await userEvent.press(addTagButton);
+
+      // Verify modalState was changed to ADD_TAG
+      expect(setStateMock).toHaveBeenCalledWith(ModalStates.ADD_TAG);
+    });
+
+    describe('Text Modal', () => {
+      test('should show a text modal with the placeholder of "Tag Name"', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Add Tag action
+        const addTagButton = rendered.getByTestId('addTag', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(addTagButton);
+
+        // Verify TextModal is displayed with the correct label
+        expect(rendered.getByTestId('input')).toBeVisible();
+      });
+
+      test('tapping the "Add Tag" button should close the modal and call updateFile with the original file, but with a new tag with the title specified in the modal\'s text field', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Add Tag action
+        const addTagButton = rendered.getByTestId('addTag', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(addTagButton);
+
+        // Enter a tag name in the input
+        const input = rendered.getByTestId('input');
+        await userEvent.type(input, 'New Tag');
+
+        // Press the Add Tag button in the modal
+        const modalAddTagButton = rendered.getByTestId('submitButton');
+        await userEvent.press(modalAddTagButton);
+
+        // Verify updateFile was called with the correct parameters
+        expect(updateFile).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 0,
+            tags: [{ id: 1, title: 'test tag' }, { title: 'New Tag' }],
+          }),
+        );
+
+        // Verify modal was closed
+        expect(setStateMock).toHaveBeenCalledWith(ModalStates.CLOSED);
+      });
+
+      test('tapping the "Add Tag" button should not call updateFile if the text field is empty', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Add Tag action
+        const addTagButton = rendered.getByTestId('addTag', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(addTagButton);
+
+        // Enter an empty string in the input
+        const input = rendered.getByTestId('input');
+        await userEvent.type(input, '');
+
+        // Press the Add Tag button in the modal
+        const modalAddTagButton = rendered.getByTestId('submitButton');
+        await userEvent.press(modalAddTagButton);
+
+        // Verify updateFile was not called
+        expect(updateFile).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('delete', () => {
+    test('should set modalState to DELETE_CONFIRM', async () => {
+      const rendered = render(
+        <PaperProvider>
+          <FileView />
+        </PaperProvider>,
+      );
+
+      // Wait for loading spinner to be removed
+      await waitForElementToBeRemoved(() =>
+        rendered.getByTestId('loadingSpinner'),
+      );
+
+      // Find and press the FAB button to open the menu
+      const fabButton = rendered.getByTestId('actionGroup');
+      await userEvent.press(fabButton);
+
+      // Find and press the Delete action
+      const deleteButton = rendered.getByText('Delete', {
+        includeHiddenElements: true,
+      });
+      await userEvent.press(deleteButton);
+
+      // Verify modalState was changed to DELETE_CONFIRM
+      expect(setStateMock).toHaveBeenCalledWith(ModalStates.DELETE_CONFIRM);
+    });
+
+    describe('ConfirmModal', () => {
+      test('should show a confirm modal with the text "Are you sure you want to delete this file?"', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Delete action
+        const deleteButton = rendered.getByText('Delete', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(deleteButton);
+
+        // Verify ConfirmModal is displayed with the correct text
+        expect(rendered.getByTestId('confirmModal')).toBeVisible();
+        expect(
+          rendered.getByText('Are you sure you want to delete this file?'),
+        ).toBeVisible();
+      });
+
+      test('tapping the "Delete" button should close the modal and call deleteFile with the current file\'s id', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Delete action
+        const deleteButton = rendered.getByText('Delete', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(deleteButton);
+
+        // Press the Delete button in the modal
+        const modalDeleteButton = rendered.getByText('Delete');
+        await userEvent.press(modalDeleteButton);
+
+        // Verify deleteFile was called with the correct parameters
+        expect(deleteFile).toHaveBeenCalledWith(0);
+
+        // Verify modal was closed
+        expect(setStateMock).toHaveBeenCalledWith(ModalStates.CLOSED);
+      });
+
+      test('tapping the "Delete" button should navigate to the `/folders/${file.folderId}` route', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Delete action
+        const deleteButton = rendered.getByText('Delete', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(deleteButton);
+
+        // Press the Delete button in the modal
+        const modalDeleteButton = rendered.getByText('Delete');
+        await userEvent.press(modalDeleteButton);
+
+        // Verify router.replace was called with the correct parameters
+        expect(router.replace).toHaveBeenCalledWith('/folders/0');
+      });
+
+      test('tapping the "Cancel" button should close the modal, but should not call deleteFile', async () => {
+        const rendered = render(
+          <PaperProvider>
+            <FileView />
+          </PaperProvider>,
+        );
+
+        // Wait for loading spinner to be removed
+        await waitForElementToBeRemoved(() =>
+          rendered.getByTestId('loadingSpinner'),
+        );
+
+        // Find and press the FAB button to open the menu
+        const fabButton = rendered.getByTestId('actionGroup');
+        await userEvent.press(fabButton);
+
+        // Find and press the Delete action
+        const deleteButton = rendered.getByText('Delete', {
+          includeHiddenElements: true,
+        });
+        await userEvent.press(deleteButton);
+
+        // Press the Cancel button in the modal
+        const modalCancelButton = rendered.getByText('Cancel');
+        await userEvent.press(modalCancelButton);
+
+        // Verify deleteFile was not called
+        expect(deleteFile).not.toHaveBeenCalled();
+
+        // Verify modal was closed
+        expect(setStateMock).toHaveBeenCalledWith(ModalStates.CLOSED);
       });
     });
   });

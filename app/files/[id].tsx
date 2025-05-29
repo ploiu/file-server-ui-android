@@ -58,7 +58,6 @@ export enum FabStates {
 export enum ModalStates {
   RENAME = 'RENAME',
   ADD_TAG = 'ADD_TAG',
-  EDIT_TAG = 'EDIT_TAG',
   DELETE_CONFIRM = 'DELETE_CONFIRM',
   CLOSED = 'CLOSED',
   ERROR = 'ERROR',
@@ -248,15 +247,17 @@ export default function FileView() {
         return (
           <TextModal
             label={'Tag Name'}
-            onSubmit={title => submitFile({ tags: [...file.tags, { title }] })}
+            onSubmit={title => {
+              if (title.trim().length > 0) {
+                submitFile({ tags: [...file.tags, { title }] });
+              }
+            }}
             onCancel={hideModal}
             submitButtonText={'Add Tag'}
             submitIcon={'tag-plus'}
             cancelIcon={'cancel'}
           />
         );
-      case ModalStates.EDIT_TAG:
-        break;
       case ModalStates.DELETE_CONFIRM:
         return (
           <ConfirmModal
@@ -295,6 +296,7 @@ export default function FileView() {
         {
           icon: 'tag-plus',
           label: 'Add Tag',
+          testID: 'addTag',
           onPress: () => setModalState(ModalStates.ADD_TAG),
         },
         {
