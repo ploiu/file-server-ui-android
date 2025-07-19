@@ -1,4 +1,7 @@
 # File-Server-UI-Android
+> [!NOTE]
+> This project is archived. React native feels incredibly clunky and I don't like how it partially adapts web standards. I'd much rather not use something that tries to look like web standards but is completely incompatible with them.
+> I am working on a rewrite of both the [desktop app](https://github.com/ploiu/file-server-ui) and this one, using kotlin multiplatform
 
 this is the android version of the [desktop file_server client](https://github.com/ploiu/file-server-ui) for my [file server](https://github.com/ploiu/file_server). It's still under development but I aim to bring all functionality to this app.
 
